@@ -1,0 +1,4 @@
+<launch>
+	<node pkg="dji_waypoint_navigator" type="dji_waypoint_navigator" name="dji_waypoint_navigator" output="screen">
+	</node>
+</launch>
