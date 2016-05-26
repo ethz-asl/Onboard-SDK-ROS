@@ -1,0 +1,14 @@
+# GPS trajectory to be read and executed by DJI waypoint_navigator
+velocity_range: 5
+
+# Trajectory
+# x (ENU) [m] / longitude (GPS) [deg]
+easting: [8.680281, 8.681361, 8.680707, 8.681043, 8.680374, 8.681481]
+# y (ENU) [m] / latitude (GPS) [deg]
+northing: [47.453184, 47.453562, 47.453249, 47.453331, 47.452992, 47.453382]
+# z (ENU) [m] / altitude (GPS) [m]
+height: [1.2, 1.2, 1.2, 1.2, 1.2, 1.2]
+# Heading [deg]
+heading: [30.0, 30.0, 30.0, 30.0, 30.0, 30.0]
+# Waiting time at each waypoint [s]
+waiting_time: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]

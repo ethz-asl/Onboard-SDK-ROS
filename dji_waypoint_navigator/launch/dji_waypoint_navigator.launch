@@ -1,4 +1,5 @@
 <launch>
-	<node pkg="dji_waypoint_navigator" type="dji_waypoint_navigator" name="dji_waypoint_navigator" output="screen">
-	</node>
+  <node pkg="dji_waypoint_navigator" type="dji_waypoint_navigator" name="dji_waypoint_navigator" output="screen">
+    <rosparam file="$(find dji_waypoint_navigator)/parameters/trajectory_sugarbeet.yaml"/>
+  </node>
 </launch>

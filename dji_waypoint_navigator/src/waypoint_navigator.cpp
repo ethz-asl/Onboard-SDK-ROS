@@ -9,15 +9,21 @@ using namespace DJI::onboardSDK;
 
 int main(int argc, char **argv)
 {
+  double velocity_range;
   int temp32;
-  ros::init(argc, argv, "waypoint_navigator")
+  std::vector<double> easting;
+  std::vector<double> northing;
+  std::vector<double> height;
+
+  ros::init(argc, argv, "waypoint_navigator");
   ros::NodeHandle nh;
+  ros::NodeHandle private_nh("~");
+  private_nh.getParam("velocity_range", velocity_range);
+  private_nh.getParam("easting", easting);
+  private_nh.getParam("northing", northing);
+  private_nh.getParam("height", height);
   DJIDrone* drone = new DJIDrone(nh);
 
-	//virtual RC test data
-	uint32_t virtual_rc_data[16];
-	//set frequency test data
-	uint8_t msg_frequency_data[16] = {1,2,3,4,3,2,1,2,3,4,3,2,1,2,3,4};
 	//waypoint action test data
   dji_sdk::WaypointList newWaypointList;
   dji_sdk::Waypoint waypoint0;
@@ -29,9 +35,6 @@ int main(int argc, char **argv)
   //groundstation test data
 	dji_sdk::MissionWaypointTask waypoint_task;
 	dji_sdk::MissionWaypoint 	 waypoint;
-	dji_sdk::MissionHotpointTask hotpoint_task;
-	dji_sdk::MissionFollowmeTask followme_task;
-	dji_sdk::MissionFollowmeTarget followme_target;
 
   drone->request_sdk_permission_control();
   printf("Control requested.");
@@ -121,7 +124,6 @@ int main(int argc, char **argv)
 
       drone->mission_waypoint_upload(waypoint_task);
     }
-
     return 0;
   }
 

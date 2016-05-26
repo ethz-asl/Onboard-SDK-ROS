@@ -142,7 +142,7 @@ add_executable(dji_waypoint_navigator src/waypoint_navigator.cpp)
 target_link_libraries(dji_waypoint_navigator
   ${catkin_LIBRARIES}
 )
-add_dependencies(dji_sdk_client dji_sdk_generate_messages_cpp)
+add_dependencies(dji_waypoint_navigator dji_sdk_generate_messages_cpp)
 
 #############
 ## Install ##
@@ -160,14 +160,14 @@ add_dependencies(dji_sdk_client dji_sdk_generate_messages_cpp)
 #)
 
 ## Mark executables and/or libraries for installation
-install(TARGETS dji_sdk_client
+install(TARGETS dji_waypoint_navigator
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-catkin_install_python(PROGRAMS script/client.py
-					DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+#catkin_install_python(PROGRAMS script/client.py
+#					DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 ## Mark cpp header files for installation
 
 install(DIRECTORY launch
