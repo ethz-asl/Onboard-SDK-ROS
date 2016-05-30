@@ -4,6 +4,7 @@
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
 #include <std_msgs/UInt8.h>
+#include <geometry_msgs/Point.h>
 #include <boost/bind.hpp>
 #include <dji_sdk/dji_sdk.h>
 #include <actionlib/server/simple_action_server.h>
@@ -27,6 +28,7 @@ private:
     dji_sdk::Gimbal gimbal;
     dji_sdk::GlobalPosition global_position;
     dji_sdk::GlobalPosition global_position_ref;
+    geometry_msgs::Point external_position;
     dji_sdk::LocalPosition local_position;
     dji_sdk::LocalPosition local_position_ref;
     dji_sdk::PowerStatus power_status;
@@ -151,6 +153,7 @@ private:
 
     DroneTaskActionServer* drone_task_action_server;
     LocalPositionNavigationActionServer* local_position_navigation_action_server;
+    LocalPositionNavigationActionServer* external_position_navigation_action_server;
     GlobalPositionNavigationActionServer* global_position_navigation_action_server;
     WaypointNavigationActionServer* waypoint_navigation_action_server;
 
@@ -158,6 +161,8 @@ private:
     dji_sdk::DroneTaskResult drone_task_result;
     dji_sdk::LocalPositionNavigationFeedback local_position_navigation_feedback;
     dji_sdk::LocalPositionNavigationResult local_position_navigation_result;
+    dji_sdk::LocalPositionNavigationFeedback external_position_navigation_feedback;
+    dji_sdk::LocalPositionNavigationResult external_position_navigation_result;
     dji_sdk::GlobalPositionNavigationFeedback global_position_navigation_feedback;
     dji_sdk::GlobalPositionNavigationResult global_position_navigation_result;
     dji_sdk::WaypointNavigationFeedback waypoint_navigation_feedback;
@@ -165,6 +170,7 @@ private:
 
     bool drone_task_action_callback(const dji_sdk::DroneTaskGoalConstPtr& goal);
     bool local_position_navigation_action_callback(const dji_sdk::LocalPositionNavigationGoalConstPtr& goal);
+    bool external_position_navigation_action_callback(const dji_sdk::LocalPositionNavigationGoalConstPtr& goal);
     bool global_position_navigation_action_callback(const dji_sdk::GlobalPositionNavigationGoalConstPtr& goal);
     bool waypoint_navigation_action_callback(const dji_sdk::WaypointNavigationGoalConstPtr& goal);
 
@@ -179,6 +185,11 @@ private:
             "dji_sdk/local_position_navigation_action",
             boost::bind(&DJISDKNode::local_position_navigation_action_callback, this, _1), false);
         local_position_navigation_action_server->start();
+
+       external_position_navigation_action_server = new LocalPositionNavigationActionServer(nh,
+            "dji_sdk/external_position_navigation_action",
+            boost::bind(&DJISDKNode::external_position_navigation_action_callback, this, _1), false);
+        external_position_navigation_action_server->start();
 
         global_position_navigation_action_server = new GlobalPositionNavigationActionServer(nh,
             "dji_sdk/global_position_navigation_action",

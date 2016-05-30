@@ -1,7 +1,7 @@
 #include <dji_sdk/dji_sdk_node.h>
 #include <algorithm>
 
-bool DJISDKNode::process_waypoint(dji_sdk::Waypoint new_waypoint) 
+bool DJISDKNode::process_waypoint(dji_sdk::Waypoint new_waypoint)
 {
     double dst_latitude = new_waypoint.latitude;
     double dst_longitude = new_waypoint.longitude;
@@ -28,9 +28,9 @@ bool DJISDKNode::process_waypoint(dji_sdk::Waypoint new_waypoint)
     flight_ctrl_data.yaw = new_waypoint.heading;
 
 
-    int latitude_progress = 0; 
-    int longitude_progress = 0; 
-    int altitude_progress = 0; 
+    int latitude_progress = 0;
+    int longitude_progress = 0;
+    int altitude_progress = 0;
 
     while (latitude_progress < 100 || longitude_progress < 100 || altitude_progress <100) {
         if(waypoint_navigation_action_server->isPreemptRequested()) {
@@ -94,7 +94,7 @@ bool DJISDKNode::drone_task_action_callback(const dji_sdk::DroneTaskGoalConstPtr
   drone_task_feedback.progress = 1;
   drone_task_action_server->publishFeedback(drone_task_feedback);
   drone_task_action_server->setSucceeded();
-  
+
   return true;
 }
 
@@ -120,7 +120,7 @@ bool DJISDKNode::local_position_navigation_action_callback(const dji_sdk::LocalP
 
   float dis_x = dst_x - org_x;
   float dis_y = dst_y - org_y;
-  float dis_z = dst_z - org_z; 
+  float dis_z = dst_z - org_z;
 
   float det_x, det_y, det_z;
 
@@ -129,9 +129,9 @@ bool DJISDKNode::local_position_navigation_action_callback(const dji_sdk::LocalP
   flight_ctrl_data.z = dst_z;
   flight_ctrl_data.yaw = 0;
 
-  int x_progress = 0; 
-  int y_progress = 0; 
-  int z_progress = 0; 
+  int x_progress = 0;
+  int y_progress = 0;
+  int z_progress = 0;
   while (x_progress < 100 || y_progress < 100 || z_progress <100) {
 
      flight_ctrl_data.x = dst_x - local_position.x;
@@ -165,6 +165,64 @@ bool DJISDKNode::local_position_navigation_action_callback(const dji_sdk::LocalP
   return true;
 }
 
+bool DJISDKNode::external_position_navigation_action_callback(const dji_sdk::LocalPositionNavigationGoalConstPtr& goal)
+{
+
+  float dst_x = goal->x;
+  float dst_y = goal->y;
+  float dst_z = goal->z;
+
+  float org_x = external_position.x;
+  float org_y = external_position.y;
+  float org_z = external_position.z;
+
+  float dis_x = dst_x - org_x;
+  float dis_y = dst_y - org_y;
+  float dis_z = dst_z - org_z;
+
+  float det_x, det_y, det_z;
+
+  DJI::onboardSDK::FlightData flight_ctrl_data;
+  flight_ctrl_data.flag = 0x90;
+  flight_ctrl_data.z = dst_z;
+  flight_ctrl_data.yaw = 0;
+
+  int x_progress = 0;
+  int y_progress = 0;
+  int z_progress = 0;
+  while (x_progress < 100 || y_progress < 100 || z_progress <100) {
+
+     flight_ctrl_data.x = dst_x - external_position.x;
+     flight_ctrl_data.y = dst_y - external_position.y;
+     rosAdapter->flight->setFlight(&flight_ctrl_data);
+
+     det_x = (100 * (dst_x - external_position.x)) / dis_x;
+     det_y = (100 * (dst_y - external_position.y)) / dis_y;
+     det_z = (100 * (dst_z - external_position.z)) / dis_z;
+
+     x_progress = 100 - (int)det_x;
+     y_progress = 100 - (int)det_y;
+     z_progress = 100 - (int)det_z;
+
+     //lazy evaluation
+     if (std::abs(dst_x - external_position.x) < 0.1) x_progress = 100;
+     if (std::abs(dst_y - external_position.y) < 0.1) y_progress = 100;
+     if (std::abs(dst_z - external_position.z) < 0.1) z_progress = 100;
+
+     external_position_navigation_feedback.x_progress = x_progress;
+     external_position_navigation_feedback.y_progress = y_progress;
+     external_position_navigation_feedback.z_progress = z_progress;
+     external_position_navigation_action_server->publishFeedback(external_position_navigation_feedback);
+
+     usleep(20000);
+  }
+
+  external_position_navigation_result.result = true;
+  external_position_navigation_action_server->setSucceeded(external_position_navigation_result);
+
+  return true;
+}
+
 
 bool DJISDKNode::global_position_navigation_action_callback(const dji_sdk::GlobalPositionNavigationGoalConstPtr& goal)
 {
@@ -192,9 +250,9 @@ bool DJISDKNode::global_position_navigation_action_callback(const dji_sdk::Globa
     flight_ctrl_data.yaw = 0;
 
 
-    int latitude_progress = 0; 
-    int longitude_progress = 0; 
-    int altitude_progress = 0; 
+    int latitude_progress = 0;
+    int longitude_progress = 0;
+    int altitude_progress = 0;
 
     while (latitude_progress < 100 || longitude_progress < 100 || altitude_progress < 100) {
 
@@ -258,4 +316,3 @@ bool DJISDKNode::waypoint_navigation_action_callback(const dji_sdk::WaypointNavi
 
     return true;
 }
-

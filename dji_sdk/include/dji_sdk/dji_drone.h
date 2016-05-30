@@ -1,6 +1,7 @@
 #include <dji_sdk/dji_sdk.h>
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
+#include <geometry_msgs/TransformStamped.h>
 #include <std_msgs/UInt8.h>
 #include <actionlib/client/simple_action_client.h>
 #include <actionlib/client/terminal_state.h>
@@ -18,6 +19,7 @@ private:
 
 	DroneTaskActionClient drone_task_action_client;
 	LocalPositionNavigationActionClient local_position_navigation_action_client;
+	LocalPositionNavigationActionClient external_position_navigation_action_client;
 	GlobalPositionNavigationActionClient global_position_navigation_action_client;
 	WaypointNavigationActionClient waypoint_navigation_action_client;
 
@@ -81,6 +83,7 @@ public:
     dji_sdk::Gimbal gimbal;
     dji_sdk::GlobalPosition global_position;
     dji_sdk::GlobalPosition global_position_ref;
+    geometry_msgs::Point external_position;
     dji_sdk::LocalPosition local_position;
     dji_sdk::LocalPosition local_position_ref;
     dji_sdk::PowerStatus power_status;
@@ -172,7 +175,9 @@ private:
 
   void external_transform_subscriber_callback(geometry_msgs::TransformStamped transform)
 	{
-
+    this->external_position.x = transform.transform.translation.x;
+    this->external_position.y = transform.transform.translation.y;
+    this->external_position.z = transform.transform.translation.z;
 	}
 
 	void time_stamp_subscriber_callback(dji_sdk::TimeStamp time_stamp)
@@ -245,7 +250,8 @@ public:
 	DJIDrone(ros::NodeHandle& nh):
 		drone_task_action_client(nh, "dji_sdk/drone_task_action", true),
 		local_position_navigation_action_client(nh, "dji_sdk/local_position_navigation_action", true),
-		global_position_navigation_action_client(nh, "dji_sdk/global_position_navigation_action", true),
+		external_position_navigation_action_client(nh, "dji_sdk/external_position_navigation_action", true),
+    global_position_navigation_action_client(nh, "dji_sdk/global_position_navigation_action", true),
 		waypoint_navigation_action_client(nh, "dji_sdk/waypoint_navigation_action", true)
 	{
 		activation_service = nh.serviceClient<dji_sdk::Activation>("dji_sdk/activation");
@@ -293,7 +299,7 @@ public:
         velocity_subscriber = nh.subscribe<dji_sdk::Velocity>("dji_sdk/velocity", 10, &DJIDrone::velocity_subscriber_callback, this);
         activation_subscriber = nh.subscribe<std_msgs::UInt8>("dji_sdk/activation", 10, &DJIDrone::activation_subscriber_callback, this);
         odometry_subscriber = nh.subscribe<nav_msgs::Odometry>("dji_sdk/odometry",10, &DJIDrone::odometry_subscriber_callback, this);
-        external_transform = nh.subscribe<geometry_msgs::TransformStamped>("external_transform",10, &DJIDrone::external_transform_subscriber_callback, this);
+        external_transform_subscriber = nh.subscribe<geometry_msgs::TransformStamped>("external_transform",10, &DJIDrone::external_transform_subscriber_callback, this);
 
 		time_stamp_subscriber = nh.subscribe<dji_sdk::TimeStamp>("dji_sdk/time_stamp", 10, &DJIDrone::time_stamp_subscriber_callback,this);
 		mission_status_subscriber = nh.subscribe<dji_sdk::MissionPushInfo>("dji_sdk/mission_status", 10, &DJIDrone::mission_status_push_info_callback, this);
@@ -548,6 +554,18 @@ public:
 		local_position_navigation_goal.y = y;
 		local_position_navigation_goal.z = z;
 		local_position_navigation_action_client.sendGoal(local_position_navigation_goal, done_callback, active_callback, feedback_callback);
+	}
+
+  void external_position_navigation_send_request(float x, float y, float z,
+		LocalPositionNavigationActionClient::SimpleDoneCallback done_callback = LocalPositionNavigationActionClient::SimpleDoneCallback(),
+		LocalPositionNavigationActionClient::SimpleActiveCallback active_callback = LocalPositionNavigationActionClient::SimpleActiveCallback(),
+		LocalPositionNavigationActionClient::SimpleFeedbackCallback feedback_callback = LocalPositionNavigationActionClient::SimpleFeedbackCallback())
+	{
+		dji_sdk::LocalPositionNavigationGoal external_position_navigation_goal;
+		external_position_navigation_goal.x = x;
+		external_position_navigation_goal.y = y;
+		external_position_navigation_goal.z = z;
+	  external_position_navigation_action_client.sendGoal(external_position_navigation_goal, done_callback, active_callback, feedback_callback);
 	}
 
 	bool local_position_navigation_wait_for_result(const ros::Duration duration = ros::Duration(0))
