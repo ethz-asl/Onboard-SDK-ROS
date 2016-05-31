@@ -25,6 +25,9 @@
       <remap from="spoofed_external_transform" to="spoofed_external_transform" />
     </node>
 
+    <node pkg="dji_sdk_dji2ros" type="dji2ros_wrapper.py" name="dji2ros_wrapper" output="screen">
+    </node>
+
   </group>
 
 </launch>
