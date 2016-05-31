@@ -5,6 +5,7 @@
 #include <nav_msgs/Odometry.h>
 #include <std_msgs/UInt8.h>
 #include <geometry_msgs/Point.h>
+#include <geometry_msgs/TransformStamped.h>
 #include <boost/bind.hpp>
 #include <dji_sdk/dji_sdk.h>
 #include <actionlib/server/simple_action_server.h>
@@ -59,12 +60,21 @@ private:
     ros::Publisher gimbal_publisher;
     ros::Publisher global_position_publisher;
     ros::Publisher local_position_publisher;
+    ros::Publisher external_position_publisher;
     ros::Publisher power_status_publisher;
     ros::Publisher rc_channels_publisher;
     ros::Publisher velocity_publisher;
     ros::Publisher odometry_publisher;
     ros::Publisher time_stamp_publisher;
 	ros::Publisher data_received_from_remote_device_publisher;
+
+  ros::Subscriber external_transform_subscriber;
+
+  void init_subscribers(ros::NodeHandle& nh)
+  {
+    external_transform_subscriber = nh.subscribe<geometry_msgs::TransformStamped>("dji_sdk/external_transform",10, &DJISDKNode::external_transform_subscriber_callback, this);
+
+  }
 
     void init_publishers(ros::NodeHandle& nh)
     {
@@ -78,6 +88,7 @@ private:
         gimbal_publisher = nh.advertise<dji_sdk::Gimbal>("dji_sdk/gimbal", 10);
         global_position_publisher = nh.advertise<dji_sdk::GlobalPosition>("dji_sdk/global_position", 10);
         local_position_publisher = nh.advertise<dji_sdk::LocalPosition>("dji_sdk/local_position", 10);
+        external_position_publisher = nh.advertise<geometry_msgs::Point>("dji_sdk/external_position", 10);
         power_status_publisher = nh.advertise<dji_sdk::PowerStatus>("dji_sdk/power_status", 10);
         rc_channels_publisher = nh.advertise<dji_sdk::RCChannels>("dji_sdk/rc_channels", 10);
         velocity_publisher = nh.advertise<dji_sdk::Velocity>("dji_sdk/velocity", 10);
@@ -209,6 +220,7 @@ private:
     int init_parameters(ros::NodeHandle& nh_private);
     void broadcast_callback();
 	void transparent_transmission_callback(unsigned char *buf, unsigned char len);
+  void external_transform_subscriber_callback(geometry_msgs::TransformStamped transform);
 
     bool process_waypoint(dji_sdk::Waypoint new_waypoint);
 

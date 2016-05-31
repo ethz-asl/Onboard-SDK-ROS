@@ -190,7 +190,7 @@ bool DJISDKNode::external_position_navigation_action_callback(const dji_sdk::Loc
   int x_progress = 0;
   int y_progress = 0;
   int z_progress = 0;
-  while (x_progress < 100 || y_progress < 100 || z_progress <100) {
+  while (x_progress < 100 || y_progress < 100 || z_progress < 100) {
 
      flight_ctrl_data.x = dst_x - external_position.x;
      flight_ctrl_data.y = dst_y - external_position.y;

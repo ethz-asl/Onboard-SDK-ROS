@@ -29,6 +29,7 @@ private:
                            dji_waypoint_navigator::GoToLocalWaypoint::Response& response);
   bool go_to_external_waypoint(dji_waypoint_navigator::GoToExternalWaypoint::Request& request,
                            dji_waypoint_navigator::GoToExternalWaypoint::Response& response);
+  bool cancel_goals();
 
   DJIDrone* drone_;
   ros::ServiceServer takeoff_service_;
@@ -60,8 +61,7 @@ bool DJITestNavigatorNode::takeoff(std_srvs::Empty::Request& request, std_srvs::
 bool DJITestNavigatorNode::go_to_global_waypoint(dji_waypoint_navigator::GoToGlobalWaypoint::Request& request,
                            dji_waypoint_navigator::GoToGlobalWaypoint::Response& response)
 {
-  drone_->local_position_navigation_stop_tracking_goal();
-  drone_->global_position_navigation_stop_tracking_goal();
+  cancel_goals();
   drone_->global_position_navigation_send_request(request.point.x, request.point.y, request.point.z);
   return true;
 }
@@ -69,8 +69,7 @@ bool DJITestNavigatorNode::go_to_global_waypoint(dji_waypoint_navigator::GoToGlo
 bool DJITestNavigatorNode::go_to_local_waypoint(dji_waypoint_navigator::GoToLocalWaypoint::Request& request,
                          dji_waypoint_navigator::GoToLocalWaypoint::Response& response)
 {
-  drone_->local_position_navigation_stop_tracking_goal();
-  drone_->global_position_navigation_stop_tracking_goal();
+  cancel_goals();
   drone_->local_position_navigation_send_request(request.point.x, request.point.y, request.point.z);
   return true;
 }
@@ -78,9 +77,25 @@ bool DJITestNavigatorNode::go_to_local_waypoint(dji_waypoint_navigator::GoToLoca
 bool DJITestNavigatorNode::go_to_external_waypoint(dji_waypoint_navigator::GoToExternalWaypoint::Request& request,
                          dji_waypoint_navigator::GoToExternalWaypoint::Response& response)
 {
-  drone_->local_position_navigation_stop_tracking_goal();
-  drone_->global_position_navigation_stop_tracking_goal();
+  cancel_goals();
   drone_->external_position_navigation_send_request(request.point.x, request.point.y, request.point.z);
+  return true;
+}
+
+bool DJITestNavigatorNode::cancel_goals()
+{
+  if (drone_->external_position_navigation_get_state() == actionlib::SimpleClientGoalState::ACTIVE) {
+    drone_->external_position_navigation_cancel_all_goals();
+  }
+
+  if (drone_->local_position_navigation_get_state() == actionlib::SimpleClientGoalState::ACTIVE) {
+    drone_->local_position_navigation_cancel_all_goals();
+  }
+
+  if (drone_->global_position_navigation_get_state() == actionlib::SimpleClientGoalState::ACTIVE) {
+    drone_->global_position_navigation_cancel_all_goals();
+  }
+
   return true;
 }
 

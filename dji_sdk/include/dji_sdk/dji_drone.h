@@ -68,7 +68,7 @@ private:
     ros::Subscriber velocity_subscriber;
     ros::Subscriber activation_subscriber;
     ros::Subscriber odometry_subscriber;
-    ros::Subscriber external_transform_subscriber;
+    ros::Subscriber external_position_subscriber;
 
 	ros::Subscriber time_stamp_subscriber;
 	ros::Subscriber mission_status_subscriber;
@@ -173,11 +173,9 @@ private:
 		this->odometry = odometry;
 	}
 
-  void external_transform_subscriber_callback(geometry_msgs::TransformStamped transform)
+  void external_position_subscriber_callback(geometry_msgs::Point point)
 	{
-    this->external_position.x = transform.transform.translation.x;
-    this->external_position.y = transform.transform.translation.y;
-    this->external_position.z = transform.transform.translation.z;
+    this->external_position = point;
 	}
 
 	void time_stamp_subscriber_callback(dji_sdk::TimeStamp time_stamp)
@@ -299,7 +297,7 @@ public:
         velocity_subscriber = nh.subscribe<dji_sdk::Velocity>("dji_sdk/velocity", 10, &DJIDrone::velocity_subscriber_callback, this);
         activation_subscriber = nh.subscribe<std_msgs::UInt8>("dji_sdk/activation", 10, &DJIDrone::activation_subscriber_callback, this);
         odometry_subscriber = nh.subscribe<nav_msgs::Odometry>("dji_sdk/odometry",10, &DJIDrone::odometry_subscriber_callback, this);
-        external_transform_subscriber = nh.subscribe<geometry_msgs::TransformStamped>("external_transform",10, &DJIDrone::external_transform_subscriber_callback, this);
+        external_position_subscriber = nh.subscribe<geometry_msgs::Point>("dji_sdk/external_position",10, &DJIDrone::external_position_subscriber_callback, this);
 
 		time_stamp_subscriber = nh.subscribe<dji_sdk::TimeStamp>("dji_sdk/time_stamp", 10, &DJIDrone::time_stamp_subscriber_callback,this);
 		mission_status_subscriber = nh.subscribe<dji_sdk::MissionPushInfo>("dji_sdk/mission_status", 10, &DJIDrone::mission_status_push_info_callback, this);
@@ -519,9 +517,19 @@ public:
 		local_position_navigation_action_client.cancelGoal();
 	}
 
+  void external_position_navigation_cancel_current_goal()
+	{
+		external_position_navigation_action_client.cancelGoal();
+	}
+
 	void local_position_navigation_cancel_all_goals()
 	{
 		local_position_navigation_action_client.cancelAllGoals();
+	}
+
+  void external_position_navigation_cancel_all_goals()
+	{
+		external_position_navigation_action_client.cancelAllGoals();
 	}
 
 	void local_position_navigation_cancel_goals_at_and_before_time(const ros::Time time)
@@ -529,9 +537,19 @@ public:
 		local_position_navigation_action_client.cancelGoalsAtAndBeforeTime(time);
 	}
 
+  void external_position_navigation_cancel_goals_at_and_before_time(const ros::Time time)
+	{
+		external_position_navigation_action_client.cancelGoalsAtAndBeforeTime(time);
+	}
+
 	dji_sdk::LocalPositionNavigationResultConstPtr local_position_navigation_get_result()
 	{
 		return local_position_navigation_action_client.getResult();
+	}
+
+  dji_sdk::LocalPositionNavigationResultConstPtr external_position_navigation_get_result()
+	{
+		return external_position_navigation_action_client.getResult();
 	}
 
 	actionlib::SimpleClientGoalState local_position_navigation_get_state()
@@ -539,9 +557,19 @@ public:
 		return local_position_navigation_action_client.getState();
 	}
 
+  actionlib::SimpleClientGoalState external_position_navigation_get_state()
+	{
+		return external_position_navigation_action_client.getState();
+	}
+
 	bool local_position_navigation_is_server_connected()
 	{
 		return local_position_navigation_action_client.isServerConnected();
+	}
+
+  bool external_position_navigation_is_server_connected()
+	{
+		return external_position_navigation_action_client.isServerConnected();
 	}
 
 	void local_position_navigation_send_request(float x, float y, float z,
@@ -576,6 +604,12 @@ public:
 	bool local_position_navigation_stop_tracking_goal()
 	{
 		local_position_navigation_action_client.stopTrackingGoal();
+		return true;
+	}
+
+  bool external_position_navigation_stop_tracking_goal()
+	{
+		external_position_navigation_action_client.stopTrackingGoal();
 		return true;
 	}
 

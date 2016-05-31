@@ -266,7 +266,7 @@ DJISDKNode::DJISDKNode(ros::NodeHandle& nh, ros::NodeHandle& nh_private) : dji_s
     init_publishers(nh);
     init_services(nh);
     init_actions(nh);
-
+		init_subscribers(nh);
 
     init_parameters(nh_private);
 
@@ -301,3 +301,9 @@ dji_sdk::LocalPosition DJISDKNode::gps_convert_ned(dji_sdk::GlobalPosition loc)
     return local;
 }
 
+void DJISDKNode::external_transform_subscriber_callback(geometry_msgs::TransformStamped transform)
+{
+	external_position.x = transform.transform.translation.x;
+	external_position.y = transform.transform.translation.y;
+	external_position.z = transform.transform.translation.z;
+}
