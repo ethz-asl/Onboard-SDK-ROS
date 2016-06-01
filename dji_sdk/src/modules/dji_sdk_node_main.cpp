@@ -306,4 +306,5 @@ void DJISDKNode::external_transform_subscriber_callback(geometry_msgs::Transform
 	external_position.x = transform.transform.translation.x;
 	external_position.y = transform.transform.translation.y;
 	external_position.z = transform.transform.translation.z;
+	external_position_publisher.publish(external_position);
 }

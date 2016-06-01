@@ -192,8 +192,8 @@ bool DJISDKNode::external_position_navigation_action_callback(const dji_sdk::Loc
   int z_progress = 0;
   while (x_progress < 100 || y_progress < 100 || z_progress < 100) {
 
-     flight_ctrl_data.x = dst_x - external_position.x;
-     flight_ctrl_data.y = dst_y - external_position.y;
+     flight_ctrl_data.x = (dst_x - external_position.x)/10;
+     flight_ctrl_data.y = (dst_y - external_position.y)/10;
      rosAdapter->flight->setFlight(&flight_ctrl_data);
 
      det_x = (100 * (dst_x - external_position.x)) / dis_x;
@@ -205,9 +205,9 @@ bool DJISDKNode::external_position_navigation_action_callback(const dji_sdk::Loc
      z_progress = 100 - (int)det_z;
 
      //lazy evaluation
-     if (std::abs(dst_x - external_position.x) < 0.1) x_progress = 100;
-     if (std::abs(dst_y - external_position.y) < 0.1) y_progress = 100;
-     if (std::abs(dst_z - external_position.z) < 0.1) z_progress = 100;
+     //if (std::abs(dst_x - external_position.x) < 0.1) x_progress = 100;
+     //if (std::abs(dst_y - external_position.y) < 0.1) y_progress = 100;
+     //if (std::abs(dst_z - external_position.z) < 0.1) z_progress = 100;
 
      external_position_navigation_feedback.x_progress = x_progress;
      external_position_navigation_feedback.y_progress = y_progress;
