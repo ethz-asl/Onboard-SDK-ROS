@@ -84,17 +84,17 @@ bool DJITestNavigatorNode::go_to_external_waypoint(dji_waypoint_navigator::GoToE
 
 bool DJITestNavigatorNode::cancel_goals()
 {
-  if (drone_->external_position_navigation_get_state() == actionlib::SimpleClientGoalState::ACTIVE) {
-    drone_->external_position_navigation_cancel_all_goals();
-  }
+//  if (drone_->external_position_navigation_get_state() == actionlib::SimpleClientGoalState::ACTIVE) {
+    drone_->external_position_navigation_stop_tracking_goal();
+//  }
 
-  if (drone_->local_position_navigation_get_state() == actionlib::SimpleClientGoalState::ACTIVE) {
-    drone_->local_position_navigation_cancel_all_goals();
-  }
+//  if (drone_->local_position_navigation_get_state() == actionlib::SimpleClientGoalState::ACTIVE) {
+    drone_->local_position_navigation_stop_tracking_goal();
+//  }
 
-  if (drone_->global_position_navigation_get_state() == actionlib::SimpleClientGoalState::ACTIVE) {
-    drone_->global_position_navigation_cancel_all_goals();
-  }
+//  if (drone_->global_position_navigation_get_state() == actionlib::SimpleClientGoalState::ACTIVE) {
+    drone_->global_position_navigation_stop_tracking_goal();
+//  }
 
   return true;
 }

@@ -165,13 +165,80 @@ bool DJISDKNode::local_position_navigation_action_callback(const dji_sdk::LocalP
   return true;
 }
 
+// bool DJISDKNode::external_position_navigation_action_callback(const dji_sdk::LocalPositionNavigationGoalConstPtr& goal)
+// {
+//
+//   float dst_x = goal->x;
+//   float dst_y = goal->y;
+//   float dst_z = goal->z;
+//
+//   float org_x = external_position.x;
+//   float org_y = external_position.y;
+//   float org_z = external_position.z;
+//
+//   float dis_x = dst_x - org_x;
+//   float dis_y = dst_y - org_y;
+//   float dis_z = dst_z - org_z;
+//
+//   float det_x, det_y, det_z;
+//
+//   DJI::onboardSDK::FlightData flight_ctrl_data;
+//   flight_ctrl_data.flag = 0x90;
+//   flight_ctrl_data.z = dst_z*3;
+//   flight_ctrl_data.yaw = 0;
+//
+//   int x_progress = 0;
+//   int y_progress = 0;
+//   int z_progress = 0;
+//
+//   while (x_progress < 100 || y_progress < 100 || z_progress < 100) {
+// //  while (1) {
+//
+//      flight_ctrl_data.x = (dst_x - external_position.x)/5;
+//      flight_ctrl_data.y = (dst_y - external_position.y)/5;
+// // For controller ID
+// //     flight_ctrl_data.x = 1;
+// //     flight_ctrl_data.y = 0;
+//      rosAdapter->flight->setFlight(&flight_ctrl_data);
+//
+//      det_x = (100 * (dst_x - external_position.x)) / dis_x;
+//      det_y = (100 * (dst_y - external_position.y)) / dis_y;
+//      det_z = (100 * (dst_z - external_position.z)) / dis_z;
+//
+//      x_progress = 100 - (int)det_x;
+//      y_progress = 100 - (int)det_y;
+//      z_progress = 100 - (int)det_z;
+//
+//      //lazy evaluation
+//      if (std::abs(dst_x - external_position.x) < 0.1) x_progress = 100;
+//      if (std::abs(dst_y - external_position.y) < 0.1) y_progress = 100;
+//      if (std::abs(dst_z - external_position.z) < 0.1) z_progress = 100;
+//
+//      external_position_navigation_feedback.x_progress = x_progress;
+//      external_position_navigation_feedback.y_progress = y_progress;
+//      external_position_navigation_feedback.z_progress = z_progress;
+//      external_position_navigation_action_server->publishFeedback(external_position_navigation_feedback);
+//
+//      usleep(20000);
+//   }
+//
+//   external_position_navigation_result.result = true;
+//   external_position_navigation_action_server->setSucceeded(external_position_navigation_result);
+//
+//   return true;
+// }
+
 bool DJISDKNode::external_position_navigation_action_callback(const dji_sdk::LocalPositionNavigationGoalConstPtr& goal)
 {
 
+  // Goal position
   float dst_x = goal->x;
   float dst_y = goal->y;
   float dst_z = goal->z;
 
+  std::cout << "Destination: x = " << dst_x << ", y = " << dst_y << ", z = " << dst_z << std::endl;
+
+  // Current position
   float org_x = external_position.x;
   float org_y = external_position.y;
   float org_z = external_position.z;
@@ -180,41 +247,78 @@ bool DJISDKNode::external_position_navigation_action_callback(const dji_sdk::Loc
   float dis_y = dst_y - org_y;
   float dis_z = dst_z - org_z;
 
-  float det_x, det_y, det_z;
+  float old_err_x = 0;
+  float old_err_y = 0;
+  float old_err_z = 0;
 
-  DJI::onboardSDK::FlightData flight_ctrl_data;
-  flight_ctrl_data.flag = 0x90;
-  flight_ctrl_data.z = dst_z;
-  flight_ctrl_data.yaw = 0;
+  float err_x, err_y, err_z;
+  float det_x, det_y, det_z;
+  float i_part_x, i_part_y, i_part_z;
+  float d_part_x, d_part_y, d_part_z;
+
+  float Kp_x = 0.7;
+  float Kp_y = 0.7;
+  float Kp_z = 3;
+
+  float Ki_x = 0;
+  float Ki_y = 0;
+  float Ki_z = 0;
+
+  float Kd_x = 0;
+  float Kd_y = 0;
+  float Kd_z = 0;
 
   int x_progress = 0;
   int y_progress = 0;
   int z_progress = 0;
-  while (x_progress < 100 || y_progress < 100 || z_progress < 100) {
 
-     flight_ctrl_data.x = (dst_x - external_position.x)/10;
-     flight_ctrl_data.y = (dst_y - external_position.y)/10;
-     rosAdapter->flight->setFlight(&flight_ctrl_data);
+  DJI::onboardSDK::FlightData flight_ctrl_data;
+  flight_ctrl_data.flag = 0x90;
+  flight_ctrl_data.yaw = 0;
 
-     det_x = (100 * (dst_x - external_position.x)) / dis_x;
-     det_y = (100 * (dst_y - external_position.y)) / dis_y;
-     det_z = (100 * (dst_z - external_position.z)) / dis_z;
+  while(1) {
 
-     x_progress = 100 - (int)det_x;
-     y_progress = 100 - (int)det_y;
-     z_progress = 100 - (int)det_z;
+    // Compute progress, send action feedback
+    det_x = (100 * (dst_x - external_position.x)) / dis_x;
+    det_y = (100 * (dst_y - external_position.y)) / dis_y;
+    det_z = (100 * (dst_z - external_position.z)) / dis_z;
 
-     //lazy evaluation
-     //if (std::abs(dst_x - external_position.x) < 0.1) x_progress = 100;
-     //if (std::abs(dst_y - external_position.y) < 0.1) y_progress = 100;
-     //if (std::abs(dst_z - external_position.z) < 0.1) z_progress = 100;
+    x_progress = 100 - (int)det_x;
+    y_progress = 100 - (int)det_y;
+    z_progress = 100 - (int)det_z;
 
-     external_position_navigation_feedback.x_progress = x_progress;
-     external_position_navigation_feedback.y_progress = y_progress;
-     external_position_navigation_feedback.z_progress = z_progress;
-     external_position_navigation_action_server->publishFeedback(external_position_navigation_feedback);
+    external_position_navigation_feedback.x_progress = x_progress;
+    external_position_navigation_feedback.y_progress = y_progress;
+    external_position_navigation_feedback.z_progress = z_progress;
+    external_position_navigation_action_server->publishFeedback(external_position_navigation_feedback);
 
-     usleep(20000);
+    // Errors in x-y-z
+    err_x = dst_x - external_position.x;
+    err_y = dst_y - external_position.y;
+    err_z = dst_z - external_position.z;
+
+    i_part_x += err_x;
+    i_part_y += err_y;
+    i_part_z += err_z;
+
+    d_part_x = err_x - old_err_x;
+    d_part_y = err_y - old_err_y;
+    d_part_z = err_z - old_err_z;
+
+    flight_ctrl_data.x = Kp_x*err_x + Ki_x*i_part_x + Kd_x*d_part_x;
+    flight_ctrl_data.y = Kp_y*err_y + Ki_y*i_part_y + Kd_y*d_part_y;
+    flight_ctrl_data.z = Kp_z*err_z + Ki_z*i_part_z + Kd_z*d_part_z;
+    rosAdapter->flight->setFlight(&flight_ctrl_data);
+
+    old_err_x = err_x;
+    old_err_y = err_y;
+    old_err_z = err_z;
+
+    if ((std::abs(dst_x - external_position.x) < 0.1)  && (std::abs(dst_y - external_position.y) < 0.1) && (std::abs(dst_z - external_position.z) < 0.1)) {
+      break;
+    }
+
+    usleep(20000);
   }
 
   external_position_navigation_result.result = true;
@@ -222,7 +326,6 @@ bool DJISDKNode::external_position_navigation_action_callback(const dji_sdk::Loc
 
   return true;
 }
-
 
 bool DJISDKNode::global_position_navigation_action_callback(const dji_sdk::GlobalPositionNavigationGoalConstPtr& goal)
 {

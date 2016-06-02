@@ -12,22 +12,22 @@ static void Display_Main_Menu(void)
     printf("\r\n");
     printf("+-------------------------- < Main menu > ------------------------+\n");
 	printf("| [a] SDK Version Query         | [s] Virtual RC Test             |\n");
-	printf("| [b] Request Control           | [t] Set Sync Flag Test          |\n");	
-	printf("| [c] Release Control           | [u] Set Msg Frequency Test      |\n");	
-	printf("| [d] Takeoff                   | [v] Waypoint Mission Upload     |\n");	
-	printf("| [e] Landing                   | [w] Hotpoint Mission Upload     |\n");	
-	printf("| [f] Go Home                   | [x] Followme Mission Upload     |\n");	
-	printf("| [g] Gimbal Control Sample     | [y] Mission Start               |\n");	
-	printf("| [h] Attitude Control Sample   | [z] Mission Pause               |\n");	
-	printf("| [i] Draw Circle Sample        | [1] Mission Resume              |\n");	
-	printf("| [j] Draw Square Sample        | [2] Mission Cancel              |\n");	
-	printf("| [k] Take a Picture            | [3] Mission Waypoint Download   |\n");	
-	printf("| [l] Start Record Video        | [4] Mission Waypoint Set Speed  |\n");	 
-	printf("| [m] Stop Record Video         | [5] Mission Waypoint Get Speed  |\n");	
-	printf("| [n] Local Navigation Test     | [6] Mission Hotpoint Set Speed  |\n");	
-	printf("| [o] Global Navigation Test    | [7] Mission Hotpoint Set Radius |\n");	
-	printf("| [p] Waypoint Navigation Test  | [8] Mission Hotpoint Reset Yaw  |\n");	
-	printf("| [q] Arm the Drone             | [9] Mission Followme Set Target |\n");	
+	printf("| [b] Request Control           | [t] Set Sync Flag Test          |\n");
+	printf("| [c] Release Control           | [u] Set Msg Frequency Test      |\n");
+	printf("| [d] Takeoff                   | [v] Waypoint Mission Upload     |\n");
+	printf("| [e] Landing                   | [w] Hotpoint Mission Upload     |\n");
+	printf("| [f] Go Home                   | [x] Followme Mission Upload     |\n");
+	printf("| [g] Gimbal Control Sample     | [y] Mission Start               |\n");
+	printf("| [h] Attitude Control Sample   | [z] Mission Pause               |\n");
+	printf("| [i] Draw Circle Sample        | [1] Mission Resume              |\n");
+	printf("| [j] Draw Square Sample        | [2] Mission Cancel              |\n");
+	printf("| [k] Take a Picture            | [3] Mission Waypoint Download   |\n");
+	printf("| [l] Start Record Video        | [4] Mission Waypoint Set Speed  |\n");
+	printf("| [m] Stop Record Video         | [5] Mission Waypoint Get Speed  |\n");
+	printf("| [n] Local Navigation Test     | [6] Mission Hotpoint Set Speed  |\n");
+	printf("| [o] Global Navigation Test    | [7] Mission Hotpoint Set Radius |\n");
+	printf("| [p] Waypoint Navigation Test  | [8] Mission Hotpoint Reset Yaw  |\n");
+	printf("| [q] Arm the Drone             | [9] Mission Followme Set Target |\n");
 	printf("| [r] Disarm the Drone          | [0] Mission Hotpoint Download   |\n");
     printf("+-----------------------------------------------------------------+\n");
     printf("input a/b/c etc..then press enter key\r\n");
@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 	dji_sdk::MissionHotpointTask hotpoint_task;
 	dji_sdk::MissionFollowmeTask followme_task;
 	dji_sdk::MissionFollowmeTarget followme_target;
-	
+
     Display_Main_Menu();
     while(1)
     {
@@ -261,7 +261,7 @@ int main(int argc, char **argv)
                 {
                     vx = V * sin((V/R)*time/50.0f);
                     vy = V * cos((V/R)*time/50.0f);
-        
+
                     drone->attitude_control( Flight::HorizontalLogic::HORIZONTAL_POSITION |
                             Flight::VerticalLogic::VERTICAL_VELOCITY |
                             Flight::YawLogic::YAW_ANGLE |
@@ -395,10 +395,11 @@ int main(int argc, char **argv)
                 break;
 			case 's':
 				//virtual rc test 1: arm & disarm
+        /*
 				drone->virtual_rc_enable();
 				usleep(20000);
 
-				virtual_rc_data[0] = 1024-660;	//0-> roll     	[1024-660,1024+660] 
+				virtual_rc_data[0] = 1024-660;	//0-> roll     	[1024-660,1024+660]
 				virtual_rc_data[1] = 1024-660;	//1-> pitch    	[1024-660,1024+660]
 				virtual_rc_data[2] = 1024-660;	//2-> throttle 	[1024-660,1024+660]
 				virtual_rc_data[3] = 1024+660;	//3-> yaw      	[1024-660,1024+660]
@@ -409,12 +410,12 @@ int main(int argc, char **argv)
 					drone->virtual_rc_control(virtual_rc_data);
 					usleep(20000);
 				}
-
-				//virtual rc test 2: yaw 
+        */
+				//virtual rc test 2: yaw
 				drone->virtual_rc_enable();
-				virtual_rc_data[0] = 1024;		//0-> roll     	[1024-660,1024+660] 
+				virtual_rc_data[0] = 1024+660;		//0-> roll     	[1024-660,1024+660]
 				virtual_rc_data[1] = 1024;		//1-> pitch    	[1024-660,1024+660]
-				virtual_rc_data[2] = 1024+660;	//2-> throttle 	[1024-660,1024+660]
+				virtual_rc_data[2] = 1024;	//2-> throttle 	[1024-660,1024+660]
 				virtual_rc_data[3] = 1024;		//3-> yaw      	[1024-660,1024+660]
 				virtual_rc_data[4] = 1324;	 	//4-> gear		{1684(UP), 1324(DOWN)}
 				virtual_rc_data[6] = 1552;    	//6-> mode     	{1552(P), 1024(A), 496(F)}
