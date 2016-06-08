@@ -46,9 +46,9 @@ class Dji2RosWrapper:
 
     def attitude_quaternion_callback(self, data):
         self.quaternion.header = data.header
-        self.quaternion.quaternion.x = data.q2
-        self.quaternion.quaternion.y = data.q3
-        self.quaternion.quaternion.z = data.q1
+        self.quaternion.quaternion.x = data.q1
+        self.quaternion.quaternion.y = data.q2
+        self.quaternion.quaternion.z = data.q3
         self.quaternion.quaternion.w = data.q0
         self.local_pose.header = data.header
         self.local_pose.pose.orientation = self.quaternion.quaternion
@@ -59,7 +59,7 @@ class Dji2RosWrapper:
         self.transform_broadcaster.sendTransform((self.local_position.point.x, self.local_position.point.y, self.local_position.point.z),
                         (self.quaternion.quaternion.x, self.quaternion.quaternion.y, self.quaternion.quaternion.z, self.quaternion.quaternion.w),
                         rospy.Time.now(),
-                        "dji_matrice",
+                        "matrice",
                         "world")
         self.local_position_pub.publish(self.local_position)
         self.local_pose_pub.publish(self.local_pose)
@@ -69,7 +69,7 @@ class Dji2RosWrapper:
 if __name__ == '__main__':
 
   try:
-    rospy.init_node('external_transform_spoofer', anonymous=True)
+    rospy.init_node('dji2ros_wrapper', anonymous=True)
     gs = Dji2RosWrapper()
     rospy.spin()
   except rospy.ROSInterruptException:
