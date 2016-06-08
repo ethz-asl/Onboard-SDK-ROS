@@ -5,6 +5,7 @@ import dji_sdk.msg
 import rospy
 import tf
 from geometry_msgs.msg import PointStamped, QuaternionStamped, PoseStamped, Point
+from sensor_msgs.msg import Imu
 
 class Dji2RosWrapper:
 
@@ -15,15 +16,19 @@ class Dji2RosWrapper:
         self.quaternion = QuaternionStamped()
         self.local_pose = PoseStamped()
         self.external_pose = PoseStamped()
+        self.imu = Imu()
 
         self.external_position_sub = rospy.Subscriber('dji_sdk/external_position', Point, self.external_position_callback, tcp_nodelay=True)
         self.local_position_sub = rospy.Subscriber('dji_sdk/local_position', dji_sdk.msg.LocalPosition, self.local_position_callback, tcp_nodelay=True)
         self.attitude_quaternion_sub = rospy.Subscriber('dji_sdk/attitude_quaternion', dji_sdk.msg.AttitudeQuaternion, self.attitude_quaternion_callback, tcp_nodelay=True)
+        self.attitude_quaternion_sub = rospy.Subscriber('dji_sdk/acceleration', dji_sdk.msg.Acceleration, self.acceleration_callback, tcp_nodelay=True)
+
 
         self.local_position_pub = rospy.Publisher('ros/local_position', PointStamped, queue_size=1)
         self.external_position_pub = rospy.Publisher('ros/external_position', PointStamped, queue_size=1)
         self.local_pose_pub = rospy.Publisher('ros/local_pose', PoseStamped, queue_size=1)
         self.external_pose_pub = rospy.Publisher('ros/external_pose', PoseStamped, queue_size=1)
+        self.imu_pub = rospy.Publisher('ros/imu', Imu, queue_size=1)
 
         rospy.Timer(rospy.Duration(0.1), self.publish_callback)
 
@@ -54,6 +59,17 @@ class Dji2RosWrapper:
         self.local_pose.pose.orientation = self.quaternion.quaternion
         self.external_pose.header = data.header
         self.external_pose.pose.orientation = self.quaternion.quaternion
+        self.imu.orientation = self.quaternion.quaternion
+        self.imu.header = data.header
+        self.imu.angular_velocity.x = data.wx
+        self.imu.angular_velocity.y = data.wy
+        self.imu.angular_velocity.z = data.wz
+
+    def acceleration_callback(self, data):
+        self.imu.header = data.header
+        self.imu.linear_acceleration.x = data.ax
+        self.imu.linear_acceleration.y = data.ay
+        self.imu.linear_acceleration.z = data.az
 
     def publish_callback(self, event):
         self.transform_broadcaster.sendTransform((self.local_position.point.x, self.local_position.point.y, self.local_position.point.z),
@@ -65,6 +81,7 @@ class Dji2RosWrapper:
         self.local_pose_pub.publish(self.local_pose)
         self.external_position_pub.publish(self.external_position)
         self.external_pose_pub.publish(self.external_pose)
+        self.imu_pub.publish(self.imu)
 
 if __name__ == '__main__':
 
