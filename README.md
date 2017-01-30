@@ -11,4 +11,9 @@
 
 5. Some extra features such as deadzone recovery and auto-trim compensation. 
 
+# We are preparing the complate documentation, please bear with us :)
+
+
+
+
 ####Please refer to <https://developer.dji.com/onboard-sdk/documentation/github-platform-docs/ROS/README.html> in DJI Developer Website.
