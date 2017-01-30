@@ -22,6 +22,10 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib_msgs 
   actionlib
   dji_sdk_lib
+  tf
+  mav_msgs
+  keyboard
+  joy
 )
 
 ## System dependencies are found with CMake's conventions

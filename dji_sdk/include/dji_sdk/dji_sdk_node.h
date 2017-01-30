@@ -15,10 +15,16 @@
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
 #include <std_msgs/UInt8.h>
+#include <geometry_msgs/Point.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <sensor_msgs/Imu.h>
 #include <boost/bind.hpp>
 #include <dji_sdk/dji_sdk.h>
 #include <actionlib/server/simple_action_server.h>
 #include <dji_sdk/dji_sdk_mission.h>
+#include <mav_msgs/RollPitchYawrateThrust.h>
+#include "keyboard/Key.h"
+#include <sensor_msgs/Joy.h>
 
 #define C_EARTH (double) 6378137.0
 #define C_PI (double) 3.141592653589793
@@ -39,6 +45,7 @@ private:
     dji_sdk::Gimbal gimbal;
     dji_sdk::GlobalPosition global_position;
     dji_sdk::GlobalPosition global_position_ref;
+    geometry_msgs::Point external_position;
     dji_sdk::LocalPosition local_position;
     dji_sdk::LocalPosition local_position_ref;
     dji_sdk::PowerStatus power_status;
@@ -46,6 +53,7 @@ private:
     dji_sdk::Velocity velocity;
     nav_msgs::Odometry odometry;
 	dji_sdk::TimeStamp time_stamp;
+    sensor_msgs::Imu imu_msg;
 	dji_sdk::A3GPS A3_GPS;
 	dji_sdk::A3RTK A3_RTK;
 
@@ -71,6 +79,7 @@ private:
     ros::Publisher gimbal_publisher;
     ros::Publisher global_position_publisher;
     ros::Publisher local_position_publisher;
+    ros::Publisher external_position_publisher;
     ros::Publisher power_status_publisher;
     ros::Publisher rc_channels_publisher;
     ros::Publisher velocity_publisher;
@@ -78,8 +87,42 @@ private:
     ros::Publisher time_stamp_publisher;
     ros::Publisher data_received_from_remote_device_publisher;
 
+// Add ROS compatible message publishers
+    ros::Publisher imu_msg_publisher;
+
+    ros::Subscriber external_transform_subscriber;
+    ros::Subscriber cmd_sub_;
+    ros::Subscriber key_sub_;
+    ros::Subscriber joy_sub_;
+    
+    ros::Publisher vc_cmd_pub_;
+    
+    int fc_status_;
+    int vc_status_;
+    mav_msgs::RollPitchYawrateThrust vcCommand_;
+    DJI::onboardSDK::VirtualRCData vrc_;
+    uint32_t virtual_rc_data[16];
+    double rollScale_;
+    double pitchScale_;
+    double yawrateScale_;
+    double heightScale_;
+    double rollDeadZone_;
+    double pitchDeadZone_;
+    double heightDeadZone_;
+    double vcNeutral_;
+    double rollTrim_;
+    double pitchTrim_;
+
     ros::Publisher A3_GPS_info_publisher;
     ros::Publisher A3_RTK_info_publisher;
+
+    void init_subscribers(ros::NodeHandle& nh)
+    {
+      external_transform_subscriber = nh.subscribe<geometry_msgs::TransformStamped>("dji_sdk/external_transform",10, &DJISDKNode::external_transform_subscriber_callback, this);
+      cmd_sub_=nh.subscribe("/flourish/fcu/command/roll_pitch_yawrate_thrust",1,&DJISDKNode::cmdCallBack,this,ros::TransportHints().tcpNoDelay());
+      key_sub_=nh.subscribe("/flourish/keyboard/keydown",1,&DJISDKNode::keyboardCallBack,this,ros::TransportHints().tcpNoDelay());
+      //joy_sub_=nh.subscribe("/flourish/joy",1,&DJISDKNode::joyCallBack,this,ros::TransportHints().tcpNoDelay());
+    }
 
     void init_publishers(ros::NodeHandle& nh)
     {
@@ -93,13 +136,15 @@ private:
         gimbal_publisher = nh.advertise<dji_sdk::Gimbal>("dji_sdk/gimbal", 10);
         global_position_publisher = nh.advertise<dji_sdk::GlobalPosition>("dji_sdk/global_position", 10);
         local_position_publisher = nh.advertise<dji_sdk::LocalPosition>("dji_sdk/local_position", 10);
+        external_position_publisher = nh.advertise<geometry_msgs::Point>("dji_sdk/external_position", 10);
         power_status_publisher = nh.advertise<dji_sdk::PowerStatus>("dji_sdk/power_status", 10);
         rc_channels_publisher = nh.advertise<dji_sdk::RCChannels>("dji_sdk/rc_channels", 10);
         velocity_publisher = nh.advertise<dji_sdk::Velocity>("dji_sdk/velocity", 10);
         odometry_publisher = nh.advertise<nav_msgs::Odometry>("dji_sdk/odometry",10);
         time_stamp_publisher = nh.advertise<dji_sdk::TimeStamp>("dji_sdk/time_stamp", 10);
 	data_received_from_remote_device_publisher = nh.advertise<dji_sdk::TransparentTransmissionData>("dji_sdk/data_received_from_remote_device",10);
-
+        imu_msg_publisher = nh.advertise<sensor_msgs::Imu>("dji_sdk/imu", 1);
+        vc_cmd_pub_=nh.advertise<mav_msgs::RollPitchYawrateThrust>("/flourish/vc_cmd",1);
 	//TODO: Identify the drone version first	
 	A3_GPS_info_publisher = nh.advertise<dji_sdk::A3GPS>("dji_sdk/A3_GPS", 10);
 	A3_RTK_info_publisher = nh.advertise<dji_sdk::A3RTK>("dji_sdk/A3_RTK", 10);
@@ -222,7 +267,11 @@ private:
     int init_parameters(ros::NodeHandle& nh_private);
     void broadcast_callback();
 	void transparent_transmission_callback(unsigned char *buf, unsigned char len);
-
+    void external_transform_subscriber_callback(geometry_msgs::TransformStamped transform);
+    void cmdCallBack(const mav_msgs::RollPitchYawrateThrustConstPtr& msg);
+    void keyboardCallBack(const keyboard::KeyConstPtr& msg);
+    //void joyCallBack(const sensor_msgs::Joy::ConstPtr& msg);
+    void deadZoneRecovery(uint32_t* pVC_cmd);
     bool process_waypoint(dji_sdk::Waypoint new_waypoint);
 
     void gps_convert_ned(float &ned_x, float &ned_y,

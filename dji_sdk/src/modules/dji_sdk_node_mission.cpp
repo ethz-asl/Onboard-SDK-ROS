@@ -350,9 +350,9 @@ bool DJISDKMission::mission_fm_set_target_callback(dji_sdk::MissionFmSetTarget::
 DJISDKMission::DJISDKMission(ros::NodeHandle& nh)
 {
 	init_missions(nh);
-
-    rosAdapter->setMissionStatusCallback(&DJISDKMission::mission_status_callback, this);
-    rosAdapter->setMissionEventCallback(&DJISDKMission::mission_event_callback, this);
+		//IKS Buffer overflow crash.
+    //rosAdapter->setMissionStatusCallback(&DJISDKMission::mission_status_callback, this);
+    //rosAdapter->setMissionEventCallback(&DJISDKMission::mission_event_callback, this);
 
 }
 

@@ -13,10 +13,12 @@
 #include <dji_sdk/dji_sdk_node.h>
 #include <functional>
 #include <dji_sdk/DJI_LIB_ROS_Adapter.h>
+#include <tf/transform_broadcaster.h>
+
 //----------------------------------------------------------
 // timer spin_function 50Hz
 //----------------------------------------------------------
-
+using namespace std;
 void DJISDKNode::transparent_transmission_callback(uint8_t *buf, uint8_t len)
 {
 	dji_sdk::TransparentTransmissionData transparent_transmission_data;
@@ -60,6 +62,34 @@ void DJISDKNode::broadcast_callback()
         attitude_quaternion.ts = bc_data.timeStamp.time;
         attitude_quaternion_publisher.publish(attitude_quaternion);
     }
+
+	//update Imu message
+		if ( (msg_flags & HAS_Q) && (msg_flags & HAS_W) && (msg_flags & HAS_A) ) {
+				imu_msg.header.frame_id = "/world";
+				imu_msg.header.stamp = current_time;
+				imu_msg.orientation.w = bc_data.q.q0;
+				imu_msg.orientation.x = bc_data.q.q1;
+				imu_msg.orientation.y = -bc_data.q.q2;
+				imu_msg.orientation.z = -bc_data.q.q3;
+				imu_msg.angular_velocity.x = bc_data.w.x;
+				imu_msg.angular_velocity.y = -bc_data.w.y;
+				imu_msg.angular_velocity.z = -bc_data.w.z;
+				
+				imu_msg.linear_acceleration.x = bc_data.a.x*9.807;
+				imu_msg.linear_acceleration.y = -bc_data.a.y*9.807;
+				imu_msg.linear_acceleration.z = -bc_data.a.z*9.807;
+
+				imu_msg.orientation_covariance={-1.0,0.0,0.0,\
+											    0.0,0.0,0.0,\
+											    0.0,0.0,0.0};
+				imu_msg.angular_velocity_covariance={0,0.0,0.0,\
+											   		 0.0,0,0.0,\
+											    	 0.0,0.0,0};
+				imu_msg.linear_acceleration_covariance={0,0.0,0.0,\
+											   			0.0,0,0.0,\
+											    	 	0.0,0.0,0};
+				imu_msg_publisher.publish(imu_msg);
+		}
 
     //update global_position msg
     if (msg_flags & HAS_POS) {
@@ -120,8 +150,95 @@ void DJISDKNode::broadcast_callback()
         acceleration.az = bc_data.a.z;
         acceleration_publisher.publish(acceleration);
     }
-    
 
+    //update gimbal msg
+    if (msg_flags & HAS_GIMBAL) {
+        gimbal.header.frame_id = "/gimbal";
+        gimbal.header.stamp= current_time;
+        gimbal.ts = bc_data.timeStamp.time;
+        gimbal.roll = bc_data.gimbal.roll;
+        gimbal.pitch = bc_data.gimbal.pitch;
+        gimbal.yaw = bc_data.gimbal.yaw;
+        gimbal_publisher.publish(gimbal);
+    }
+
+//update odom msg
+    if ( (msg_flags & HAS_POS) && (msg_flags & HAS_Q) && (msg_flags & HAS_W) && (msg_flags & HAS_V) ) {
+        //odometry.header.frame_id = "/world";
+		odometry.header.frame_id = "/odom";
+		odometry.child_frame_id = "/base_link";
+
+
+		odometry.header.stamp = current_time;
+        odometry.pose.pose.position.x = local_position.x;
+        //odometry.pose.pose.position.y = local_position.y;
+        odometry.pose.pose.position.y = -local_position.y;
+        odometry.pose.pose.position.z = local_position.z;
+        odometry.pose.pose.orientation.w = attitude_quaternion.q0;
+        odometry.pose.pose.orientation.x = attitude_quaternion.q1;
+        odometry.pose.pose.orientation.y = -attitude_quaternion.q2;
+        odometry.pose.pose.orientation.z = -attitude_quaternion.q3;
+
+        odometry.twist.twist.angular.x = attitude_quaternion.wx;
+        //odometry.twist.twist.angular.y = attitude_quaternion.wy;
+        //odometry.twist.twist.angular.z = attitude_quaternion.wz;
+
+        odometry.twist.twist.angular.y = -attitude_quaternion.wy;
+        odometry.twist.twist.angular.z = -attitude_quaternion.wz;
+        odometry.twist.twist.linear.x = velocity.vx;
+        //odometry.twist.twist.linear.y = velocity.vy;
+        odometry.twist.twist.linear.y = -velocity.vy;
+        odometry.twist.twist.linear.z = velocity.vz;
+
+
+		static tf::TransformBroadcaster broad;
+		tf::Transform trans;
+		trans.setOrigin(tf::Vector3(odometry.pose.pose.position.x,
+																odometry.pose.pose.position.y,
+																odometry.pose.pose.position.z));
+		tf::Quaternion q(odometry.pose.pose.orientation.x,
+											odometry.pose.pose.orientation.y,
+											odometry.pose.pose.orientation.z,
+											odometry.pose.pose.orientation.w);
+		tf::Vector3 v_world(odometry.twist.twist.linear.x,
+												odometry.twist.twist.linear.y,
+												odometry.twist.twist.linear.z);
+
+		tf::Vector3 v_body= v_world.rotate(q.getAxis(),-q.getAngle());
+		odometry.twist.twist.linear.x = v_body.x();
+        odometry.twist.twist.linear.y = v_body.y();
+        odometry.twist.twist.linear.z = v_body.z();
+
+				trans.setRotation(q);
+				broad.sendTransform(tf::StampedTransform(trans,ros::Time::now(),"odom","base_link"));
+        odometry_publisher.publish(odometry);
+    }
+
+    //update rc_channel msg
+    if (msg_flags & HAS_RC) {
+        rc_channels.header.frame_id = "/rc";
+        rc_channels.header.stamp = current_time;
+        rc_channels.ts = bc_data.timeStamp.time;
+        rc_channels.pitch = bc_data.rc.pitch;
+        rc_channels.roll = bc_data.rc.roll;
+        rc_channels.mode = bc_data.rc.mode;
+        rc_channels.gear = bc_data.rc.gear;
+        rc_channels.throttle = bc_data.rc.throttle;
+        rc_channels.yaw = bc_data.rc.yaw;
+        rc_channels_publisher.publish(rc_channels);
+    }
+
+    //update compass msg
+    if (msg_flags & HAS_MAG) {
+        compass.header.frame_id = "/world";
+        compass.header.stamp = current_time;
+        compass.ts = bc_data.timeStamp.time;
+        compass.x = bc_data.mag.x;
+        compass.y = bc_data.mag.y;
+        compass.z = bc_data.mag.z;
+        compass_publisher.publish(compass);
+    }
+/*
     //update odom msg
     if ( (msg_flags & HAS_POS) && (msg_flags & HAS_Q) && (msg_flags & HAS_W) && (msg_flags & HAS_V) ) {
         odometry.header.frame_id = "/world";
@@ -141,12 +258,13 @@ void DJISDKNode::broadcast_callback()
         odometry.twist.twist.linear.z = velocity.vz;
         odometry_publisher.publish(odometry);
     }
+*/
 
 /******************************************************************
 ****************************If using A3****************************
 ******************************************************************/
 
-    if(version == DJI::onboardSDK::versionA3_31 || version == DJI::onboardSDK::versionA3_32) {
+    if(version == DJI::onboardSDK::versionA3_31 || DJI::onboardSDK::versionA3_32) {
 
     	//update gimbal msg
     	if (msg_flags & A3_HAS_GIMBAL) {
@@ -328,7 +446,9 @@ int DJISDKNode::init_parameters(ros::NodeHandle& nh_private)
     
 
     nh_private.param("serial_name", serial_name, std::string("/dev/ttyTHS1"));
-    nh_private.param("baud_rate", baud_rate, 230400);
+    //nh_private.param("baud_rate", baud_rate, 230400);
+    nh_private.param("baud_rate", baud_rate, 921600);
+    
     nh_private.param("app_id", app_id, 1022384);
     nh_private.param("app_version", app_version, 1);
     nh_private.param("enc_key", enc_key,
@@ -388,9 +508,25 @@ DJISDKNode::DJISDKNode(ros::NodeHandle& nh, ros::NodeHandle& nh_private) : dji_s
     init_publishers(nh);
     init_services(nh);
     init_actions(nh);
-
+	init_subscribers(nh);
 
     init_parameters(nh_private);
+
+    fc_status_=0;
+    vc_status_=0;
+    //obtained from nonlinear optimization.
+    rollScale_=0.000865;
+    pitchScale_=0.000844;
+        
+    yawrateScale_=0.002241;
+    heightScale_=0.002649;
+    rollDeadZone_=19.8;
+    pitchDeadZone_=19.8;
+    heightDeadZone_=39.6;
+    vcNeutral_=1024;
+    rollTrim_=62.757;
+    pitchTrim_=-39.983;
+
 
     int groundstation_enable;
     nh_private.param("groundstation_enable", groundstation_enable, 1);
@@ -423,3 +559,135 @@ dji_sdk::LocalPosition DJISDKNode::gps_convert_ned(dji_sdk::GlobalPosition loc)
     return local;
 }
 
+void DJISDKNode::external_transform_subscriber_callback(geometry_msgs::TransformStamped transform)
+{
+	external_position.x = transform.transform.translation.x;
+	external_position.y = transform.transform.translation.y;
+	external_position.z = transform.transform.translation.z;
+	external_position_publisher.publish(external_position);
+}
+
+void DJISDKNode::cmdCallBack(const mav_msgs::RollPitchYawrateThrustConstPtr& msg)
+{
+    //std::cout<<"cmdCallBack"<<std::endl;
+    if(fc_status_&&!vc_status_)
+    {
+        DJI::onboardSDK::VirtualRCSetting vrc_setting;
+        vrc_setting.enable = 1;
+        vrc_setting.cutoff = 1;
+        rosAdapter->virtualRC->setControl((bool)vrc_setting.enable, (DJI::onboardSDK::VirtualRC::CutOff)vrc_setting.cutoff);
+        vc_status_=1;
+    }
+    if(fc_status_&&vc_status_)
+    {
+        //cout<<"msg->roll="<<msg->roll<<" msg->pitch="<<msg->pitch<<" msg->yaw_rate="<<msg->yaw_rate<<" msg->thrust="<<msg->thrust.z<<endl;
+        //Rolling
+        virtual_rc_data[0] = 1024;
+        virtual_rc_data[1] = 1024;
+        virtual_rc_data[2] = 1024;
+        virtual_rc_data[3] = 1024;
+        virtual_rc_data[4] = 1324;
+        //virtual_rc_data[6] = 1552;
+        virtual_rc_data[6] = 1024; //A mode
+
+        //The below scaling factors are obtained from non-linear regression btw
+        //commands input and output measurements. The measurements can be obatined either
+        //DJI simulator or Vicon.
+        //More details can be found from the provided documentation.
+
+        //Max angle of attack = 30deg
+        virtual_rc_data[0]=(uint32_t)((msg->roll/rollScale_)+vcNeutral_+rollTrim_); //roll angle cmd
+        virtual_rc_data[1]=(uint32_t)((msg->pitch/pitchScale_)+vcNeutral_+pitchTrim_); //pitch angle cmd
+        virtual_rc_data[2]=(uint32_t)((msg->thrust.z/heightScale_)+vcNeutral_); //vertical vel cmd
+        virtual_rc_data[3]=(uint32_t)((-msg->yaw_rate/yawrateScale_)+vcNeutral_); //yaw rate cmd
+        deadZoneRecovery(virtual_rc_data);
+        auto cur_time=ros::Time::now();
+        vcCommand_.header.stamp=cur_time;
+        vcCommand_.roll=double(virtual_rc_data[0]);
+        vcCommand_.pitch=double(virtual_rc_data[1]);
+        vcCommand_.yaw_rate=double(virtual_rc_data[3]);
+        vcCommand_.thrust.z=double(virtual_rc_data[2]);
+
+        //drone_->virtual_rc_control(virtual_rc_data);
+        vrc_.roll = virtual_rc_data[0];
+        vrc_.pitch = virtual_rc_data[1];
+        vrc_.throttle = virtual_rc_data[2];
+        vrc_.yaw = virtual_rc_data[3];
+        vrc_.gear = virtual_rc_data[4];
+        vrc_.reserved = virtual_rc_data[5];
+        vrc_.mode = virtual_rc_data[6];
+        vrc_.Channel_07 = virtual_rc_data[7];
+        vrc_.Channel_08 = virtual_rc_data[8];
+        vrc_.Channel_09 = virtual_rc_data[9];
+        vrc_.Channel_10 = virtual_rc_data[10];
+        vrc_.Channel_11 = virtual_rc_data[11];
+        vrc_.Channel_12 = virtual_rc_data[12];
+        vrc_.Channel_13 = virtual_rc_data[13];
+        vrc_.Channel_14 = virtual_rc_data[14];
+        vrc_.Channel_15 = virtual_rc_data[15];
+        rosAdapter->virtualRC->sendData(vrc_);
+        vc_cmd_pub_.publish(vcCommand_);
+    }
+
+}
+
+void DJISDKNode::deadZoneRecovery(uint32_t* pVC_cmd)
+{
+  if (*pVC_cmd<=(uint32_t)(vcNeutral_+rollDeadZone_) && *pVC_cmd>=vcNeutral_) // roll dead-zone
+  {
+    *pVC_cmd=(uint32_t)(vcNeutral_+rollDeadZone_);
+    //printf("roll pos deadzone detected\n");
+  }
+  else if(*pVC_cmd>=(uint32_t)(vcNeutral_-rollDeadZone_) && *pVC_cmd<vcNeutral_)
+  {
+    *pVC_cmd=(uint32_t)(vcNeutral_-rollDeadZone_);
+  }
+
+  if (*(pVC_cmd+1)<=(uint32_t)(vcNeutral_+pitchDeadZone_) && *(pVC_cmd+1)>=vcNeutral_) // pitch dead-zone
+  {
+    *(pVC_cmd+1)=(uint32_t)(vcNeutral_+pitchDeadZone_);
+  }
+  else if(*(pVC_cmd+1)>=(uint32_t)(vcNeutral_-pitchDeadZone_) && *(pVC_cmd+1)<vcNeutral_)
+  {
+    *(pVC_cmd+1)=(uint32_t)(vcNeutral_-pitchDeadZone_);
+  }
+#if 0
+  if (*(pVC_cmd+2)<=(uint32_t)(vcNeutral_+heightDeadZone_) && *(pVC_cmd+2)>=vcNeutral_) // height dead-zone
+  {
+    *(pVC_cmd+2)=(uint32_t)(*(pVC_cmd+2)+heightDeadZone_);
+  }
+  else if(*(pVC_cmd+2)>=(uint32_t)(vcNeutral_-heightDeadZone_) && *(pVC_cmd+2)<vcNeutral_)
+  {
+    *(pVC_cmd+2)=(uint32_t)(*(pVC_cmd+2)-heightDeadZone_);
+  }
+#endif
+}
+
+
+
+void DJISDKNode::keyboardCallBack(const keyboard::KeyConstPtr& msg)
+{
+  ROS_INFO("keyboard callback");
+  switch(msg->code)
+  {
+    case 'b':
+        rosAdapter->coreAPI->setControl(1);
+        cout<<"Success in obtaining control!!"<<endl;
+        fc_status_=1;
+        break;
+
+    case 'c':
+        cout<<"Releasing SDK control permit"<<endl;
+        rosAdapter->coreAPI->setControl(0);
+        fc_status_=0;
+        vc_status_=0;
+        break;
+  }
+}
+
+#if 0
+void DJISDKNode::joyCallBack(const sensor_msgs::Joy::ConstPtr& msg)
+{
+	ROS_INFO("JoyCallBack");
+}
+#endif

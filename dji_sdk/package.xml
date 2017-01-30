@@ -50,6 +50,11 @@
   <build_depend>actionlib</build_depend>
   <build_depend>actionlib_msgs</build_depend>
   <build_depend>dji_sdk_lib</build_depend>
+  <build_depend>tf</build_depend>
+  <build_depend>mav_msgs</build_depend>
+  <build_depend>keyboard</build_depend>
+  <build_depend>joy</build_depend>
+
   <run_depend>message_runtime</run_depend>
   <run_depend>actionlib</run_depend>
   <run_depend>actionlib_msgs</run_depend>
@@ -59,6 +64,10 @@
   <run_depend>rospy</run_depend>
   <run_depend>std_msgs</run_depend>
   <run_depend>dji_sdk_lib</run_depend>
+  <run_depend>tf</run_depend>
+  <run_depend>keyboard</run_depend>
+  <run_depend>mav_msgs</run_depend>
+  <run_depend>joy</run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

@@ -230,6 +230,7 @@ bool DJISDKNode::virtual_rc_enable_control_callback(dji_sdk::VirtualRCEnableCont
     DJI::onboardSDK::VirtualRCSetting vrc_setting;
     vrc_setting.enable = request.enable;
     vrc_setting.cutoff = request.if_back_to_real;
+    printf("enable=%d if_back=%d\n",request.enable,request.if_back_to_real);
     rosAdapter->virtualRC->setControl((bool)request.enable, (DJI::onboardSDK::VirtualRC::CutOff)request.if_back_to_real);
 
     response.result = true;
