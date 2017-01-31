@@ -18,6 +18,9 @@ This repository contains the modified version of DJI Onboard SDK ROS (3.2) that 
 
 What you can achieve with these packages is your DJI M100 platform can follow your position commands or ~~trajectory~~. State estimation of MAV can be provided from any frameworks that you have, but here we used Motion capture device (Vicon) measurement for simplicity.
 
+![alt text](https://drive.google.com/file/d/0B-0CTsFowMRVODNDWDNRQnNWR3M/view?usp=sharing)
+
+
 More technical details can be found from following [relevant publication section](https://github.com/ethz-asl/dji_onboard_sdk_ros/blob/3.2/README.md#relevant-publications-documentataion-and-citation).
 
 Installation instructions
