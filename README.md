@@ -18,12 +18,15 @@ https://arxiv.org/abs/1701.08623
 If you use any of these controllers within your research, please cite one of the following references
 
 ```bibtex
-@incollection{saM100,
-                author      = "Inkyu Sa and Mina Kamel and Raghav Khanna and Marija Popovic and Juan Nieto and Roland Siegwart",
-                title       = "Dynamic System Identification, and Control for a cost effective open-source VTOL MAV",
-                archivePrefix = "arXiv",
-                eprint        = "arXiv:1701.08623",
-                year = “2017”,
+@ARTICLE{2017M100Ctrl,
+          author = {{Sa}, I. and {Kamel}, M. and {Khanna}, R. and {Popovic}, M. and {Nieto}, J. {Siegwart}, R.},
+          title = "{Dynamic System Identification, and Control for a cost effective open-source VTOL MAV}",
+          archivePrefix = "arXiv",
+          eprint = {1701.08623},
+          primaryClass = "cs.RO",
+          keywords = {Computer Science - Robotics},
+          year = 2017,
+          month = Jan
 }
 ```
 
