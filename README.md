@@ -20,7 +20,7 @@ What you can achieve with these packages is your DJI M100 platform can follow yo
 
 ![System Diagram](https://drive.google.com/uc?export=view&id=0B-0CTsFowMRVUHVWWkRHak9HT1E)
 
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=YOUTUBE_VIDEO_ID_HERE
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=06Nic6D-A1w
 " target="_blank"><img src="https://drive.google.com/uc?export=view&id=0B-0CTsFowMRVMnc5Q3JMRFVmVGs" 
 alt="Demonstration video" width="400" height="225" border="10" /></a>
 
