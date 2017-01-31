@@ -74,7 +74,7 @@ Relevant publications, documentataion, and citation
 
 https://arxiv.org/abs/1701.08623
 
-When using these software packages in your research or help you somehow, we would be very happy and looking forward to hearing from your experiences. It would be nice for us if you could cite us as well!!
+When using these software packages in your research, we would be very happy and looking forward to hearing of your experiences (Hope this help you somehow). It would be nice for us if you could cite us as well!!
 
 ```bibtex
 @ARTICLE{2017M100Ctrl,
