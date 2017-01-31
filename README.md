@@ -13,6 +13,20 @@
 
 ## We are preparing the complate documentation, please bear with us :)
 
+https://arxiv.org/abs/1701.08623
+
+If you use any of these controllers within your research, please cite one of the following references
+
+```bibtex
+@incollection{saM100,
+                author      = "Inkyu Sa and Mina Kamel and Raghav Khanna and Marija Popovic and Juan Nieto and Roland Siegwart",
+                title       = "Dynamic System Identification, and Control for a cost effective open-source VTOL MAV",
+                archivePrefix = "arXiv",
+                eprint        = "arXiv:1701.08623",
+                year = “2017”,
+}
+```
+
 
 ## More documentation can be found from http://goo.gl/sgh5C0
 
