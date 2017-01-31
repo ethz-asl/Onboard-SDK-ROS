@@ -30,7 +30,7 @@ We need two computers; an ordinary laptop (desktop) and onboard computer.
   $ sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu `lsb_release -sc` main" > /etc/apt/sources.list.d/ros-latest.list'
   $ wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
   $ sudo apt-get update
-  $ sudo apt-get install ros-indigo-desktop-full ros-indigo-joy ros-indigo-octomap-ros python-wstool python-catkin-tools
+  $ sudo apt-get install ros-indigo-desktop-full ros-indigo-joy python-wstool python-catkin-tools
   $ sudo rosdep init
   $ rosdep update
   $ source /opt/ros/indigo/setup.bash
@@ -60,7 +60,8 @@ We need two computers; an ordinary laptop (desktop) and onboard computer.
   $ git clone https://github.com/ethz-asl/ethzasl_msf.git
 ```
 
-* Build the workspace  
+* Build the workspace
+Run following command at your catkin workspace root, '~/catkin_ws'
 ```sh
   $ catkin build
 ```
