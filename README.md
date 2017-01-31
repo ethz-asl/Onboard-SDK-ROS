@@ -1,4 +1,5 @@
-#DJI Onboard SDK ROS (3.2) Packages
+DJI Onboard SDK ROS (3.2) Packages
+------
 ## We modified this package based on DJI Onboard SDK ROS (3.2) in ways that
 
 1. Increasing Baudrate from 230400 to 921600 bps in order to cope with increasted IMU publishing and sending virtual command rates (100Hz). (They were 50Hz).
@@ -11,11 +12,17 @@
 
 5. Some extra features such as deadzone recovery and auto-trim compensation. 
 
+Overview
+------
+This repository contains the modified version of DJI Onboard SDK ROS(3.2) that interfaces with ETH ASL software packages such as [MPC controller for MAV](https://github.com/ethz-asl/mav_control_rw/tree/devel/dji_m100_linear) and [Multi Sensor Fusion framework](https://github.com/ethz-asl/ethzasl_msf). What you can acheive with these packages is your DJI M100 platform can follow your position commands or trajectory. State estimation of MAV can be provided from any frameworks that you have but here we used Motion capture (Vicon) measurement for simplicity.
+More technical details can be found from relevant publication section.
+
 Installation instructions
 ------
 (If you already installed ROS on your system ([ROS installation](http://wiki.ros.org/indigo/Installation/Ubuntu), please skip step 1 and 2).
+We need two computers; an ordinary PC and onboard computer.
+
 1 Install and initialize ROS indigo desktop full, additional ROS packages, catkin-tools:
-  
 ```sh
   $ sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu `lsb_release -sc` main" > /etc/apt/sources.list.d/ros-latest.list'
   $ wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
@@ -33,11 +40,28 @@ Installation instructions
   $ catkin init  # initialize your catkin workspace
 ```
 
-## We are preparing the complate documentation, please bear with us :)
+3 Clone all software packages and dependencies
+```sh
+  $ sudo apt-get install liblapacke-dev
+  $ git clone https://github.com/ethz-asl/dji_onboard_sdk_ros
+  $ git clone https://github.com/ethz-asl/mav_control_rw -b devel/dji_m100_linear
+  $ git clone https://github.com/ethz-asl/catkin_simple.git
+  $ git clone https://github.com/ethz-asl/rotors_simulator -b feature/dji_m100_joy
+  $ git clone https://github.com/ethz-asl/mav_comm.git
+  $ git clone https://github.com/ethz-asl/eigen_catkin.git
+  $ git clone https://github.com/lrse/ros-keyboard
+```
+* Build the workspace  
+```sh
+  $ catkin build
+```
+
+Relevant publications, documentataion, and citation
+------
 
 https://arxiv.org/abs/1701.08623
 
-When using these software packages in your research, it would be great if you cite us!!
+When using these software packages in your research or help you somehow, we would be very happy and looking forward to hearing from your experiences. It would be nice for us if you could cite us as well!!
 
 ```bibtex
 @ARTICLE{2017M100Ctrl,
