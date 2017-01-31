@@ -11,11 +11,33 @@
 
 5. Some extra features such as deadzone recovery and auto-trim compensation. 
 
+Installation instructions
+------
+(If you already installed ROS on your system ([ROS installation](http://wiki.ros.org/indigo/Installation/Ubuntu), please skip step 1 and 2).
+1 Install and initialize ROS indigo desktop full, additional ROS packages, catkin-tools:
+  
+```sh
+  $ sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu `lsb_release -sc` main" > /etc/apt/sources.list.d/ros-latest.list'
+  $ wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
+  $ sudo apt-get update
+  $ sudo apt-get install ros-indigo-desktop-full ros-indigo-joy ros-indigo-octomap-ros python-wstool python-catkin-tools
+  $ sudo rosdep init
+  $ rosdep update
+  $ source /opt/ros/indigo/setup.bash
+```
+2 Initialize catkin workspace:
+```sh
+  $ mkdir -p ~/catkin_ws/src
+  $ cd ~/catkin_ws
+  $ catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release
+  $ catkin init  # initialize your catkin workspace
+```
+
 ## We are preparing the complate documentation, please bear with us :)
 
 https://arxiv.org/abs/1701.08623
 
-If you use any of these controllers within your research, please cite one of the following references
+When using these software packages in your research, it would be great if you cite us!!
 
 ```bibtex
 @ARTICLE{2017M100Ctrl,
