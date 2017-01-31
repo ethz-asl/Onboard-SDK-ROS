@@ -19,7 +19,7 @@ This repository contains the modified version of DJI Onboard SDK ROS (3.2) that 
 What you can achieve with these packages is your DJI M100 platform can follow your position commands or ~~trajectory~~. State estimation of MAV can be provided from any frameworks that you have, but here we used Motion capture device (Vicon) measurement for simplicity. The following diagram illustrates this.
 
 ![System Diagram](https://drive.google.com/uc?export=view&id=0B-0CTsFowMRVUHVWWkRHak9HT1E)
-
+![Demo video](https://drive.google.com/uc?export=view&id=0B-0CTsFowMRVMnc5Q3JMRFVmVGs)
 
 More technical details can be found from following [relevant publication section](https://github.com/ethz-asl/dji_onboard_sdk_ros/blob/3.2/README.md#relevant-publications-documentataion-and-citation).
 
@@ -69,9 +69,16 @@ Run following command at your catkin workspace root, '~/catkin_ws'
   $ catkin build
 ```
 
+M100 dynamic system identification
+------
+More explanations will be here. SysID example.
+```sh
+  $ git clone https://github.com/ethz-asl/mav_system_identification -b DJI_M100_sysID
+```
+
 Relevant publications, documentataion, and citation
 ------
-
+Please find 
 https://arxiv.org/abs/1701.08623
 
 When using these software packages in your research, we would be very happy and looking forward to hearing of your experiences (Hope this help you somehow). It would be nice for us if you could cite us as well!!
@@ -89,7 +96,10 @@ When using these software packages in your research, we would be very happy and 
 }
 ```
 
+More technical documentation
+------
+Since 8 pages of paper were insufficient to cope with technical details, we have written [technical documentation](http://goo.gl/sgh5C0) (This will move to wiki page of this repo shortly.)
 
-## More documentation can be found from http://goo.gl/sgh5C0
-
-####Please refer to <https://developer.dji.com/onboard-sdk/documentation/github-platform-docs/ROS/README.html> in DJI Developer Website.
+DJI Developer Website
+------
+DJI provides nice documentation including many features and examples of Onboard SDK ROS. Please have a look <https://developer.dji.com/onboard-sdk/documentation/github-platform-docs/ROS/README.html> for more information.
