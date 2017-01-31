@@ -14,8 +14,9 @@ We modified this package based on DJI Onboard SDK ROS (3.2) in ways that:
 
 Overview
 ------
-This repository contains the modified version of DJI Onboard SDK ROS (3.2) that interfaces with ETH ASL software packages such as [MPC controller for MAV](https://github.com/ethz-asl/mav_control_rw/tree/devel/dji_m100_linear) and [Multi-Sensor Fusion framework](https://github.com/ethz-asl/ethzasl_msf). What you can achieve with these packages is your DJI M100 platform can follow your position commands or trajectory. State estimation of MAV can be provided from any frameworks that you have, but here we used Motion capture device (Vicon) measurement for simplicity.
-More technical details can be found from relevant publication section.
+This repository contains the modified version of DJI Onboard SDK ROS (3.2) that interfaces with ETH ASL software packages such as [MPC controller for MAV](https://github.com/ethz-asl/mav_control_rw/tree/devel/dji_m100_linear) and [Multi-Sensor Fusion framework](https://github.com/ethz-asl/ethzasl_msf). 
+What you can achieve with these packages is your DJI M100 platform can follow your position commands or ~~trajectory~~. State estimation of MAV can be provided from any frameworks that you have, but here we used Motion capture device (Vicon) measurement for simplicity.
+More technical details can be found from following [relevant publication section](https://github.com/ethz-asl/dji_onboard_sdk_ros/blob/3.2/README.md#relevant-publications-documentataion-and-citation).
 
 Installation instructions
 ------
@@ -46,7 +47,6 @@ We need two computers; an ordinary laptop (desktop) and onboard computer.
 ```
 
 3.2 Onboard computer installation instructions
----
 ```sh
   $ sudo apt-get install liblapacke-dev
   $ git clone https://github.com/ethz-asl/dji_onboard_sdk_ros
