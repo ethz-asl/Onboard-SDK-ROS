@@ -26,6 +26,12 @@ alt="Demonstration video" width="400" height="225" border="10" /></a>
 
 More technical details can be found from following [relevant publication section](https://github.com/ethz-asl/dji_onboard_sdk_ros/blob/3.2/README.md#relevant-publications-documentataion-and-citation).
 
+Hardware and software specifications used in this project
+------
+This section is underconstruction and will be updated shortly.
+* Hardware:
+* Software:
+
 Installation instructions
 ------
 (If you already installed ROS on your system ([ROS installation](http://wiki.ros.org/indigo/Installation/Ubuntu), please skip step 1 and 2).
