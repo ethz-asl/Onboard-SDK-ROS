@@ -41,7 +41,7 @@
     </node>
     
     <node name="waypoint_navigator_node" pkg="waypoint_navigator" type="waypoint_navigator_node"  respawn="true" clear_params="true" output="screen">
-      <rosparam file="$(find waypoint_navigator)/paths/trajectory_exp_m100_rect.yaml"/>
+      <rosparam file="$(find dji_sdk)/resources/trajectory_exp_m100_rect_1m.yaml"/>
       <param name="mav_name" type="string" value="$(arg namespace)" />
       <!-- Real -->
       <!-- remap from="odometry" to="msf_core/odometry" / -->
