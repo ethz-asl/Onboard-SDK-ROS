@@ -13,7 +13,7 @@
   <node pkg="keyboard" type="keyboard" name="keyboard"/>
   <!-- <node pkg="rviz" type="fix_rviz" name="flourish_rviz" args="-d $(find mav_startup)/viz/flourish_exp.rviz"/> -->
   <node pkg="rqt_gui" type="rqt_gui" name="flourish_rqt"/>
-
+  <?ignore
   <node name="waypoint_navigator_node" pkg="waypoint_navigator" type="waypoint_navigator_node"  respawn="true" clear_params="true" output="screen">
       <rosparam file="$(find waypoint_navigator)/paths/trajectory_exp_m100_rect.yaml"/>
       <param name="mav_name" type="string" value="$(arg namespace)" />
@@ -24,6 +24,7 @@
       <!-- <remap from="odometry" to="dji_sdk/odometry" /> -->
     </node>
     <node name="trajectory_sampling" pkg="mav_planning_utils" type="trajectory_sampling_node" output="screen" />
+    ?>
 </group>
 
 </launch>
