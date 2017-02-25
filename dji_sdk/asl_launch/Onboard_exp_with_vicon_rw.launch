@@ -34,7 +34,7 @@
       <remap from="command/roll_pitch_yawrate_thrust" to="fcu/command/roll_pitch_yawrate_thrust" />
 
       <!-- <rosparam file="$(find mav_startup)/parameters/mavs/$(arg mav_name)/linear_mpc_m100_rw.yaml"/> -->
-      <rosparam file="$(find mav_linear_mpc)/resources/linear_mpc_$(arg mav_name).yaml"/>
+      <rosparam file="$(find mav_linear_mpc)/resources/linear_mpc_vicon_$(arg mav_name).yaml"/>
       <!-- <rosparam file="$(find mav_startup)/parameters/mavs/$(arg mav_name)/disturbance_observer_flourish.yaml"/>-->
       <rosparam file="$(find mav_disturbance_observer)/resources/disturbance_observer_$(arg mav_name).yaml"/>
       <param name="capability_group" value="Core" />
