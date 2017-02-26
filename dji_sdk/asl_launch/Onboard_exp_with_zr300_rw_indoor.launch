@@ -17,7 +17,7 @@
     <node name="pose_sensor_rovio" pkg="msf_updates" type="pose_sensor" clear_params="true" output="screen">
       <remap from="msf_core/imu_state_input" to="dji_sdk/imu" />
       <remap from="msf_updates/transform_input" to="rovio/transform" />
-      <rosparam file="$(find dji_sdk)/resources/msf_parameters_vision_realsense.yaml"/>
+      <rosparam file="$(find dji_sdk)/resources/msf_parameters_vision_realsense-2017-02-26.yaml"/>
       <param name="capability_group" value="Core" />
      </node>
 
