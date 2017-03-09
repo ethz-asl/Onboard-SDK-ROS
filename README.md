@@ -66,7 +66,7 @@ We need two computers; an ordinary laptop (desktop) and onboard computer.
   $ git clone https://github.com/ethz-asl/dji_onboard_sdk_ros
   $ git clone https://github.com/ethz-asl/mav_control_rw -b devel/dji_m100_linear
   $ git clone https://github.com/ethz-asl/catkin_simple.git
-  $ git clone https://github.com/ethz-asl/rotors_simulator -b feature/dji_m100_joy
+  $ git clone https://github.com/inkyusa/rotors_joy_inter_for_m100
   $ git clone https://github.com/ethz-asl/mav_comm.git
   $ git clone https://github.com/ethz-asl/eigen_catkin.git
   $ git clone https://github.com/ethz-asl/ethzasl_msf.git
