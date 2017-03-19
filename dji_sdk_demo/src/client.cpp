@@ -72,7 +72,7 @@ static void Display_Main_Menu(void)
 	printf("| [16] Waypoint Navigation Test | [35] Mission Followme Set Target |\n");	
 	printf("| [17] Arm the Drone            | [36] Mission Hotpoint Download   |\n");	
 	printf("| [18] Disarm the Drone         | [37] Enter Mobile commands mode  |\n");
-    printf("| [19] Virtual RC Test           \n");
+    printf("| [19] Virtual RC Test          | [-1] Exit                        |\n");
     printf("+-----------------------------------------------------------------+\n");
     printf("input 1/2/3 etc..then press enter key\r\n");
     printf("use `rostopic echo` to query drone status\r\n");
@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
 	dji_sdk::MissionFollowmeTask followme_task;
 	dji_sdk::MissionFollowmeTarget followme_target;
     uint8_t userData = 0;
-    ros::spinOnce();
+ //   ros::spinOnce();
     
     //! Setting functions to be called for Mobile App Commands mode 
     drone->setObtainControlMobileCallback(ObtainControlMobileCallback, &userData);
@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
 
 	
     Display_Main_Menu();
-    while(1)
+    while(ros::ok())
     {
         ros::spinOnce();
         std::cout << "Enter Input Val: ";
@@ -153,9 +153,9 @@ int main(int argc, char *argv[])
         std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         std::cout << "Invalid input.  Try again: ";
-	}
+    	}
 
-        if(temp32>0 && temp32<38)
+        if(temp32>-2 && temp32<38)
         {
             main_operate_code = temp32;         
         }
@@ -167,6 +167,9 @@ int main(int argc, char *argv[])
         }
         switch(main_operate_code)
         {
+            case -1:
+                /* exit */
+                return 0;
 			case 1:
 				/* SDK version query*/
 				drone->check_version();
@@ -558,22 +561,39 @@ int main(int argc, char *argv[])
 				waypoint_task.action_on_rc_lost = 0;
 				waypoint_task.gimbal_pitch_mode = 0;
 
-                static int num_waypoints = 4; 
+                static int num_waypoints = 5; 
                 static int altitude = 80;
                 // Currently hard coded, should be dynamic
-                static float orig_lat = 22.5401;
-                static float orig_long = 113.9468;
+                static float orig_lat = drone->global_position.latitude;
+                static float orig_long = drone->global_position.longitude;
+                ROS_INFO("Lat: %f", orig_lat);
+                ROS_INFO("Lon: %f", orig_long);
                 for(int i = 0; i < num_waypoints; i++)
-                {
-                    
-                    // Careens in zig-zag pattern
-    				waypoint.latitude = (orig_lat+=.0001);
-                    if (i % 2 == 1){
-    				    waypoint.longitude = orig_long+=.0001;
-                    } else {
-    				    waypoint.longitude = orig_long;
+                { // Create a square to debug overshooting
+    				
+                    switch(i){
+                        case 0:
+                            waypoint.latitude = orig_lat+=0.0001;
+                            waypoint.longitude = orig_long+=0.0001;
+                            break;
+                        case 1:
+                            waypoint.latitude = orig_lat+0.001;
+                            waypoint.longitude = orig_long;
+                            break;
+                        case 2:
+                            waypoint.latitude = orig_lat+0.001;
+                            waypoint.longitude = orig_long+0.001;
+                            break;
+                        case 3:
+                            waypoint.latitude = orig_lat;
+                            waypoint.longitude = orig_long+0.001;
+                            break;
+                        case 4:
+                            waypoint.latitude = orig_lat;
+                            waypoint.longitude = orig_long;
+                            break;
                     }
-    				waypoint.altitude = altitude-=10;
+    				waypoint.altitude = altitude-60;
     				waypoint.damping_distance = 0;
     				waypoint.target_yaw = 0;
     				waypoint.target_gimbal_pitch = 0;
@@ -677,7 +697,10 @@ int main(int argc, char *argv[])
 				//mission hotpoint reset yaw
 				drone->mission_hotpoint_reset_yaw();
 				break;
-			case 35:
+			case 35:			
+            case 36:
+				hotpoint_task = drone->mission_hotpoint_download();
+
 				//mission followme update target
 				for (int i = 0; i < 20; i++)
 				{
@@ -688,6 +711,9 @@ int main(int argc, char *argv[])
 					usleep(20000);
 				}
 				break;
+
+
+
             case 37:
                 printf("Mobile Data Commands mode entered. Use OSDK Mobile App to use this feature \n");
                 printf("End program to exit this mode \n");
@@ -695,13 +721,11 @@ int main(int argc, char *argv[])
                 {             
                 ros::spinOnce();  
                 }
-			case 36:
-				hotpoint_task = drone->mission_hotpoint_download();
 
             default:
                 break;
         }
-        main_operate_code = -1;
+        main_operate_code = -2;
         Display_Main_Menu();
     }
     return 0;
