@@ -1,0 +1,36 @@
+<launch>
+
+<arg name="namespace" default="flourish"/>
+
+  <group ns="$(arg namespace)">
+
+    <node pkg="dji_sdk" type="dji_sdk_node" name="dji_sdk" output="screen">
+      <!-- Node parameters -->
+      <param name="serial_name" type="string" value="/dev/ttyUSB0"/>
+      <param name="baud_rate" type="int" value="230400"/>
+      <param name="app_id" type="int" value="1027253"/>
+      <param name="app_version" type="int" value="1"/>
+      <param name="app_bundle_id" type="string" value="Welcome to use dji-sdk"/>
+      <param name="enc_key" type="string" value="2267d8cc7874b641a2d16798afb659ba4876b5dfd9b0a0e471c00e188b5c9ed3"/>
+      <param name="groundstation_enable" type="int" value="1"/>
+      <!-- External position/transform topic -->
+      <remap from="dji_sdk/external_transform" to="spoofed_external_transform" />
+      <!-- remap from="dji_sdk/external_transform" to="vrpn_client/estimated_transform" / -->
+    </node>
+
+    <node pkg="dji_waypoint_navigator" type="dji_test_navigator" name="test_navigator" output="screen">
+    </node>
+
+    <node pkg="dji_waypoint_navigator" type="external_transform_spoofer.py" name="external_transform_spoofer" output="screen">
+      <remap from="local_position" to="dji_sdk/local_position" />
+      <remap from="spoofed_external_transform" to="spoofed_external_transform" />
+      <!-- Maximum noise radius (polar coordinates) [m] -->
+      <param name="max_noise_radius" type="double" value="0.0" />
+    </node>
+
+    <node pkg="dji_sdk_dji2ros" type="dji2ros_wrapper.py" name="dji2ros_wrapper" output="screen">
+    </node>
+
+  </group>
+
+</launch>
