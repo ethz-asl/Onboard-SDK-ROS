@@ -60,10 +60,11 @@ int main(int argc, char **argv)
     waypoint_task.mission_waypoint.push_back(waypoint);
   }
 
-  drone->mission_waypoint_upload(waypoint_task);
-  printf("Mission uploaded.\n");
   drone->request_sdk_permission_control();
   printf("Control requested.\n");
+  drone->mission_waypoint_upload(waypoint_task);
+  printf("Mission uploaded.\n");
+
   Display_Main_Menu();
 
   while (1) {
