@@ -15,6 +15,8 @@
 #include <dji_sdk/DJI_LIB_ROS_Adapter.h>
 #include <tf/transform_broadcaster.h>
 #include <iomanip>
+#include <cuckoo_time_translator/DeviceTimeTranslator.h>
+#include <stdint.h>
 
 
 //----------------------------------------------------------
@@ -50,10 +52,19 @@ void DJISDKNode::broadcast_callback()
     auto current_time = ros::Time::now();
 
 
+
     if(msg_flags & HAS_TIME){
+
+        // Only this message containes the received time in the header and the hardware time within the message
+        // All following messages should have translated hardware times in the header.
         time_stamp.header.frame_id = "/time";
         time_stamp.header.stamp = current_time;
-        time_stamp.time = bc_data.timeStamp.time*10/4;  // This is now in ms
+
+        if(device_time_translator_){
+        current_time = device_time_translator_->update(bc_data.timeStamp.time, current_time, 0.0); // estimated offset is 0.0 for now observed to usuall be < 2 ms can be upto ~ 20 ms!!!
+        //cout << setprecision(15) <<setw(30) << "Translated HW Time Offset: " << current_time.toSec() - ros::Time::now().toSec() << endl;
+        }
+        time_stamp.time = bc_data.timeStamp.time;  // This is now in units of 1/400 s
         time_stamp.time_ns = bc_data.timeStamp.nanoTime; // This is perhaps more accurate??? But requires handling the wrapping after every 4.295 secs. DO NOT SUM both as it leads to double counting.
         if(bc_data.timeStamp.nanoTime < ::g_prevNanoTime){
             ::g_counter++;
@@ -83,6 +94,7 @@ void DJISDKNode::broadcast_callback()
 	//update Imu message
 		if ( (msg_flags & HAS_Q) && (msg_flags & HAS_W) && (msg_flags & HAS_A) ) {
 				imu_msg.header.frame_id = "/world";
+                // Use translated hardware time
 				imu_msg.header.stamp = current_time;
                 // Convert from NED to ENU frame
 				imu_msg.orientation.w = bc_data.q.q0;
@@ -535,6 +547,15 @@ DJISDKNode::DJISDKNode(ros::NodeHandle& nh, ros::NodeHandle& nh_private) : dji_s
     init_services(nh);
     init_actions(nh);
 	init_subscribers(nh);
+    // Init time stamp translator
+    device_time_translator_.reset(new cuckoo_time_translator::DeviceTimeUnwrapperAndTranslator(
+          cuckoo_time_translator::TimestampUnwrapper(
+            UINT32_MAX, // offset at every overflow of containing uint32_t
+            400 // at 400Hz
+          ),
+          nh
+        )
+    );
 
     init_parameters(nh_private);
 

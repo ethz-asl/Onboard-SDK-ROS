@@ -26,6 +26,7 @@
 #include <mav_msgs/RollPitchYawrateThrust.h>
 #include "keyboard/Key.h"
 #include <sensor_msgs/Joy.h>
+#include <cuckoo_time_translator/DeviceTimeTranslator.h>
 
 #define C_EARTH (double) 6378137.0
 #define C_PI (double) 3.141592653589793
@@ -58,6 +59,8 @@ private:
     sensor_msgs::NavSatFix gps_msg;
 	dji_sdk::A3GPS A3_GPS;
 	dji_sdk::A3RTK A3_RTK;
+// Declare Time translator
+    boost::shared_ptr<cuckoo_time_translator::DeviceTimeUnwrapperAndTranslator> device_time_translator_; // TODO: Why does this have to be a boost::shared_ptr ?
 
 
 	bool activation_result = false;

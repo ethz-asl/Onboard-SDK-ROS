@@ -16,6 +16,7 @@
 #include <dji_sdk/dji_drone.h>
 #include <cstdlib>
 #include <stdlib.h>
+#include <mav_msgs/RollPitchYawrateThrust.h>
 #include <actionlib/client/simple_action_client.h>
 #include <actionlib/client/terminal_state.h>
 
@@ -49,7 +50,6 @@ void StopMapLASLoggingMobileCallback(DJIDrone *drone);
 void StartCollisionAvoidanceCallback(DJIDrone *drone);
 void StopCollisionAvoidanceCallback(DJIDrone *drone);
 
-
 static void Display_Main_Menu(void)
 {
     printf("\r\n");
@@ -78,7 +78,6 @@ static void Display_Main_Menu(void)
     printf("use `rostopic echo` to query drone status\r\n");
     printf("----------------------------------------\r\n");
 }
-
    
 int main(int argc, char *argv[])
 {
@@ -94,9 +93,11 @@ int main(int argc, char *argv[])
     ROS_INFO("sdk_service_client_test");
     ros::NodeHandle nh;
     DJIDrone* drone = new DJIDrone(nh);
-
+    ros::Publisher rpyrthMsg_publisher = nh.advertise<mav_msgs::RollPitchYawrateThrust>("dji_sdk/attitude_cmd", 1);
+    mav_msgs::RollPitchYawrateThrust rpyrthMsg;
 	//virtual RC test data
 	uint32_t virtual_rc_data[16];
+    ros::Rate r(50);
 
 	//set frequency test data
 	uint8_t msg_frequency_data[16] = {1,2,3,4,3,2,1,2,3,4,3,2,1,2,3,4};
@@ -225,7 +226,7 @@ int main(int argc, char *argv[])
                 break;
 
             case 8:
-                /* attitude control sample*/
+                /* attitude control sample
                 drone->takeoff();
                 sleep(8);
 
@@ -321,6 +322,29 @@ int main(int argc, char *argv[])
                 sleep(1);
 
                 drone->landing();
+                */
+
+                // Subscribe to rc Channels
+                /* Register Subscribers */
+                
+                
+                while (ros::ok())
+                {
+                    // update rollpitchyawratethrust message
+                    auto curr_time = ros::Time::now();
+                    rpyrthMsg.header.stamp = curr_time;
+                    rpyrthMsg.roll = double(drone->rc_channels.roll)*30/10000;
+                    rpyrthMsg.pitch = double(drone->rc_channels.pitch)*30/10000;
+                    rpyrthMsg.yaw_rate = double(drone->rc_channels.yaw)*100/10000;
+                    rpyrthMsg.thrust.z = 36+(double(drone->rc_channels.throttle))*26/10000;
+                    // RPYRTH control in body frame binary 0b00101011
+                    std::cout<< "RPYRTh Cmd: " << rpyrthMsg.roll << ", " <<  rpyrthMsg.pitch << ", " <<  rpyrthMsg.yaw_rate << ", " <<  rpyrthMsg.thrust.z << std::endl;
+                    drone->attitude_control(0x2B, rpyrthMsg.roll, -rpyrthMsg.pitch, rpyrthMsg.thrust.z, rpyrthMsg.yaw_rate);
+                    //drone->attitude_control(0x2B,0,0,90,0);
+                    rpyrthMsg_publisher.publish(rpyrthMsg);
+                    ros::spinOnce();
+                    usleep(10000);
+                }                
 
                 break;
 
