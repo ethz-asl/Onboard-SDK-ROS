@@ -336,7 +336,11 @@ int main(int argc, char *argv[])
                     rpyrthMsg.roll = double(drone->rc_channels.roll)*30/10000;
                     rpyrthMsg.pitch = double(drone->rc_channels.pitch)*30/10000;
                     rpyrthMsg.yaw_rate = double(drone->rc_channels.yaw)*100/10000;
-                    rpyrthMsg.thrust.z = 36+(double(drone->rc_channels.throttle))*26/10000;
+                    rpyrthMsg.thrust.z = 36+(double(drone->rc_channels.throttle))*64/10000;
+		    if (rpyrthMsg.thrust.z < 10){
+                    	rpyrthMsg.thrust.z = 10;
+		    }
+		    
                     // RPYRTH control in body frame binary 0b00101011
                     std::cout<< "RPYRTh Cmd: " << rpyrthMsg.roll << ", " <<  rpyrthMsg.pitch << ", " <<  rpyrthMsg.yaw_rate << ", " <<  rpyrthMsg.thrust.z << std::endl;
                     drone->attitude_control(0x2B, rpyrthMsg.roll, -rpyrthMsg.pitch, rpyrthMsg.thrust.z, rpyrthMsg.yaw_rate);
