@@ -27,6 +27,7 @@ find_package(catkin REQUIRED COMPONENTS
   keyboard
   joy
   cuckoo_time_translator
+  geographic_msgs
 )
 
 ## System dependencies are found with CMake's conventions

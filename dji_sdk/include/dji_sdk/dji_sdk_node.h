@@ -27,6 +27,7 @@
 #include "keyboard/Key.h"
 #include <sensor_msgs/Joy.h>
 #include <cuckoo_time_translator/DeviceTimeTranslator.h>
+#include <geographic_msgs/GeoPoseStamped.h>
 
 #define C_EARTH (double) 6378137.0
 #define C_PI (double) 3.141592653589793
@@ -57,6 +58,7 @@ private:
 	dji_sdk::TimeStamp time_stamp;
     sensor_msgs::Imu imu_msg;
     sensor_msgs::NavSatFix gps_msg;
+    geographic_msgs::GeoPoseStamped geopose_msg;
 	dji_sdk::A3GPS A3_GPS;
 	dji_sdk::A3RTK A3_RTK;
 // Declare Time translator
@@ -92,9 +94,10 @@ private:
     ros::Publisher time_stamp_publisher;
     ros::Publisher data_received_from_remote_device_publisher;
 
-// Add ROS compatible message publishers
+// Add ROS compatible message publishers under namespace ~/dji_ros/
     ros::Publisher imu_msg_publisher;
     ros::Publisher gps_msg_publisher;
+    ros::Publisher geopose_msg_publisher;
 
     ros::Subscriber external_transform_subscriber;
     ros::Subscriber cmd_sub_;
@@ -125,9 +128,9 @@ private:
     void init_subscribers(ros::NodeHandle& nh)
     {
       external_transform_subscriber = nh.subscribe<geometry_msgs::TransformStamped>("dji_sdk/external_transform",10, &DJISDKNode::external_transform_subscriber_callback, this);
-      cmd_sub_=nh.subscribe("/flourish/fcu/command/roll_pitch_yawrate_thrust",1,&DJISDKNode::cmdCallBack,this,ros::TransportHints().tcpNoDelay());
-      key_sub_=nh.subscribe("/flourish/keyboard/keydown",1,&DJISDKNode::keyboardCallBack,this,ros::TransportHints().tcpNoDelay());
-      //joy_sub_=nh.subscribe("/flourish/joy",1,&DJISDKNode::joyCallBack,this,ros::TransportHints().tcpNoDelay());
+      cmd_sub_=nh.subscribe("fcu/command/roll_pitch_yawrate_thrust",1,&DJISDKNode::cmdCallBack,this,ros::TransportHints().tcpNoDelay());
+      key_sub_=nh.subscribe("keyboard/keydown",1,&DJISDKNode::keyboardCallBack,this,ros::TransportHints().tcpNoDelay());
+      //joy_sub_=nh.subscribe("joy",1,&DJISDKNode::joyCallBack,this,ros::TransportHints().tcpNoDelay());
     }
 
     void init_publishers(ros::NodeHandle& nh)
@@ -149,9 +152,10 @@ private:
         odometry_publisher = nh.advertise<nav_msgs::Odometry>("dji_sdk/odometry",10);
         time_stamp_publisher = nh.advertise<dji_sdk::TimeStamp>("dji_sdk/time_stamp", 10);
 	data_received_from_remote_device_publisher = nh.advertise<dji_sdk::TransparentTransmissionData>("dji_sdk/data_received_from_remote_device",10);
-        imu_msg_publisher = nh.advertise<sensor_msgs::Imu>("dji_sdk/imu", 1);
-        gps_msg_publisher = nh.advertise<sensor_msgs::NavSatFix>("dji_sdk/gps", 1);
-        vc_cmd_pub_=nh.advertise<mav_msgs::RollPitchYawrateThrust>("/flourish/vc_cmd",1);
+        imu_msg_publisher = nh.advertise<sensor_msgs::Imu>("dji_ros/imu", 1);
+        gps_msg_publisher = nh.advertise<sensor_msgs::NavSatFix>("dji_ros/gps", 1);
+        geopose_msg_publisher = nh.advertise<geographic_msgs::GeoPoseStamped>("dji_ros/geopose", 1);
+        vc_cmd_pub_=nh.advertise<mav_msgs::RollPitchYawrateThrust>("vc_cmd",1);
 	//TODO: Identify the drone version first	
 	A3_GPS_info_publisher = nh.advertise<dji_sdk::A3GPS>("dji_sdk/A3_GPS", 10);
 	A3_RTK_info_publisher = nh.advertise<dji_sdk::A3RTK>("dji_sdk/A3_RTK", 10);

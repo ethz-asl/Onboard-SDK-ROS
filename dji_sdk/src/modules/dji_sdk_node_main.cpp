@@ -14,6 +14,7 @@
 #include <functional>
 #include <dji_sdk/DJI_LIB_ROS_Adapter.h>
 #include <tf/transform_broadcaster.h>
+#include <tf/LinearMath/Transform.h>
 #include <iomanip>
 #include <cuckoo_time_translator/DeviceTimeTranslator.h>
 #include <stdint.h>
@@ -96,7 +97,17 @@ void DJISDKNode::broadcast_callback()
 				imu_msg.header.frame_id = "/world";
                 // Use translated hardware time
 				imu_msg.header.stamp = current_time;
-                // Convert from NED to ENU frame
+                
+                // Conversion from NED to NWU (XYZ--robot body frame)
+                /*
+                tf::Quaternion qNED2ENU();
+                qNED2ENU.setEulerZYX(pi/2,0, -pi/2);
+                tf::Quaternion qIMU(bc_data.q.q1, bc_data.q.q2, bc_data.q.q3, bc_data.q.q0);
+                tf::Quaternion qIMUENU;
+                qIMUENU = qNED2ENU*qIMU;
+                imu_msg.orientation = quaternionTFToMsg(qIMUENU);
+                */
+                // Convert from NED to ENU frame // This is conversion to NWU frame not ENU
 				imu_msg.orientation.w = bc_data.q.q0;
 				imu_msg.orientation.x = bc_data.q.q1;
 				imu_msg.orientation.y = -bc_data.q.q2;
@@ -121,7 +132,7 @@ void DJISDKNode::broadcast_callback()
 				imu_msg_publisher.publish(imu_msg);
 		}
 
-    //update global_position and gps msg
+    //update global_position, gps and geopose msg
     if (msg_flags & HAS_POS) {
         global_position.header.frame_id = "/world";
         global_position.header.stamp = current_time;
@@ -206,26 +217,32 @@ void DJISDKNode::broadcast_callback()
 		odometry.header.frame_id = "/odom";
 		odometry.child_frame_id = "/base_link";
 
-
+        
 		odometry.header.stamp = current_time;
+        // Convert from NED to NWU
+        /*
         odometry.pose.pose.position.x = local_position.x;
-        //odometry.pose.pose.position.y = local_position.y;
         odometry.pose.pose.position.y = -local_position.y;
         odometry.pose.pose.position.z = local_position.z;
+        */
         odometry.pose.pose.orientation.w = attitude_quaternion.q0;
         odometry.pose.pose.orientation.x = attitude_quaternion.q1;
         odometry.pose.pose.orientation.y = -attitude_quaternion.q2;
         odometry.pose.pose.orientation.z = -attitude_quaternion.q3;
-
-        odometry.twist.twist.angular.x = attitude_quaternion.wx;
-        //odometry.twist.twist.angular.y = attitude_quaternion.wy;
-        //odometry.twist.twist.angular.z = attitude_quaternion.wz;
-
-        odometry.twist.twist.angular.y = -attitude_quaternion.wy;
+        
+        // Convert from NED to ENU frame
+        odometry.pose.pose.position.x = local_position.y;
+        //odometry.pose.pose.position.y = local_position.y;
+        odometry.pose.pose.position.y = local_position.x;
+        odometry.pose.pose.position.z = local_position.z;
+        tf::Quaternion qOdom;
+        tf::quaternionMsgToTF(odometry.pose.pose.orientation, qOdom);
+        tf::quaternionTFToMsg(tf::createQuaternionFromYaw(M_PI/2)*qOdom, odometry.pose.pose.orientation);
+        odometry.twist.twist.angular.x = attitude_quaternion.wy;
+        odometry.twist.twist.angular.y = attitude_quaternion.wx;
         odometry.twist.twist.angular.z = -attitude_quaternion.wz;
-        odometry.twist.twist.linear.x = velocity.vx;
-        //odometry.twist.twist.linear.y = velocity.vy;
-        odometry.twist.twist.linear.y = -velocity.vy;
+        odometry.twist.twist.linear.x = velocity.vy;
+        odometry.twist.twist.linear.y = velocity.vx;
         odometry.twist.twist.linear.z = velocity.vz;
 
 
@@ -235,9 +252,9 @@ void DJISDKNode::broadcast_callback()
 																odometry.pose.pose.position.y,
 																odometry.pose.pose.position.z));
 		tf::Quaternion q(odometry.pose.pose.orientation.x,
-											odometry.pose.pose.orientation.y,
-											odometry.pose.pose.orientation.z,
-											odometry.pose.pose.orientation.w);
+						 odometry.pose.pose.orientation.y,
+						 odometry.pose.pose.orientation.z,
+						 odometry.pose.pose.orientation.w);
 		tf::Vector3 v_world(odometry.twist.twist.linear.x,
 												odometry.twist.twist.linear.y,
 												odometry.twist.twist.linear.z);
@@ -247,9 +264,19 @@ void DJISDKNode::broadcast_callback()
         odometry.twist.twist.linear.y = v_body.y();
         odometry.twist.twist.linear.z = v_body.z();
 
-				trans.setRotation(q);
-				broad.sendTransform(tf::StampedTransform(trans,ros::Time::now(),"odom","base_link"));
+		trans.setRotation(q);
+		broad.sendTransform(tf::StampedTransform(trans,ros::Time::now(),"odom","base_link"));
         odometry_publisher.publish(odometry);
+
+         // Update geopose msg
+        geopose_msg.header.stamp = current_time;
+        geopose_msg.header.frame_id = "/global_enu";
+        geopose_msg.pose.position.latitude = bc_data.pos.latitude * 180.0 / C_PI;
+        geopose_msg.pose.position.longitude = bc_data.pos.longitude * 180.0 / C_PI;
+        geopose_msg.pose.position.altitude = bc_data.pos.altitude;
+        geopose_msg.pose.orientation = odometry.pose.pose.orientation;
+        std::cout << "Should publish geopose message: " << geopose_msg.pose.position.latitude << std::endl;
+        geopose_msg_publisher.publish(geopose_msg);
     }
 
     //update rc_channel msg
