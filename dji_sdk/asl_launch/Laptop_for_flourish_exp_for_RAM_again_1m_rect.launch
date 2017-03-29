@@ -1,0 +1,14 @@
+<launch>
+  <arg name="mav_name" default="flourish"/>
+  <arg name="namespace" default="$(arg mav_name)" />
+  <arg name="dev" default="/dev/ttyUSB0"/>
+
+<group ns="$(arg namespace)">
+  <node pkg="keyboard" type="keyboard" name="keyboard"/>
+  <!-- <node pkg="rviz" type="fix_rviz" name="flourish_rviz" args="-d $(find mav_startup)/viz/flourish_exp.rviz"/> -->
+  <node pkg="rqt_gui" type="rqt_gui" name="flourish_rqt"/>
+    <node name="leica_interface" pkg="leica_interface" type="leica_node.py" output="screen" respawn="true" args="-b -l -p $(arg dev)">  
+    </node>
+</group>
+
+</launch>
