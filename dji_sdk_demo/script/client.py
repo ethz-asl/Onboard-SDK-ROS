@@ -193,15 +193,15 @@ def main():
             drone.local_position_navigation_send_request(-30, -30, 15)
         elif main_operate_code == 'n':
             # GPS Navi Test 
-            drone.global_position_navigation_send_request(22.535, 113.95, 100)
+            drone.global_position_navigation_send_request(47.453184, 8.68028, 20)
         elif main_operate_code == 'o':
             # Waypoint List Navi Test 
             newWaypointList = [
-                dji_sdk.msg.Waypoint(latitude = 22.535, longitude = 113.95, altitude = 100, staytime = 5, heading = 0),
-                dji_sdk.msg.Waypoint(latitude = 22.535, longitude = 113.96, altitude = 100, staytime = 0, heading = 90),
-                dji_sdk.msg.Waypoint(latitude = 22.545, longitude = 113.96, altitude = 100, staytime = 4, heading = -90),
-                dji_sdk.msg.Waypoint(latitude = 22.545, longitude = 113.96, altitude = 10, staytime = 2, heading = 180),
-                dji_sdk.msg.Waypoint(latitude = 22.525, longitude = 113.93, altitude = 50, staytime = 0, heading = -180)]
+                dji_sdk.msg.Waypoint(latitude = 47.535, longitude = 8.685, altitude = 10, staytime = 5, heading = 0),
+                dji_sdk.msg.Waypoint(latitude = 47.535, longitude = 8.686, altitude = 10, staytime = 0, heading = 90),
+                dji_sdk.msg.Waypoint(latitude = 47.545, longitude = 8.686, altitude = 20, staytime = 4, heading = -90),
+                dji_sdk.msg.Waypoint(latitude = 47.545, longitude = 8.686, altitude = 15, staytime = 2, heading = 180),
+                dji_sdk.msg.Waypoint(latitude = 47.525, longitude = 8.683, altitude = 15, staytime = 0, heading = -180)]
             drone.waypoint_navigation_send_request(newWaypointList)
         elif main_operate_code == 'p':
             drone.arm_drone()
