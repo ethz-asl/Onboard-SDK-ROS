@@ -275,7 +275,6 @@ void DJISDKNode::broadcast_callback()
         geopose_msg.pose.position.longitude = bc_data.pos.longitude * 180.0 / C_PI;
         geopose_msg.pose.position.altitude = bc_data.pos.altitude;
         geopose_msg.pose.orientation = odometry.pose.pose.orientation;
-        std::cout << "Should publish geopose message: " << geopose_msg.pose.position.latitude << std::endl;
         geopose_msg_publisher.publish(geopose_msg);
     }
 
