@@ -574,12 +574,12 @@ DJISDKNode::DJISDKNode(ros::NodeHandle& nh, ros::NodeHandle& nh_private) : dji_s
     init_actions(nh);
 	init_subscribers(nh);
     // Init time stamp translator
-    device_time_translator_.reset(new cuckoo_time_translator::DeviceTimeUnwrapperAndTranslator(
-          cuckoo_time_translator::TimestampUnwrapper(
+    device_time_translator_.reset(new cuckoo_time_translator::DefaultDeviceTimeUnwrapperAndTranslator(
+          cuckoo_time_translator::WrappingClockParameters(
             UINT32_MAX, // offset at every overflow of containing uint32_t
             400 // at 400Hz
           ),
-          nh
+          nh.getNamespace()
         )
     );
 

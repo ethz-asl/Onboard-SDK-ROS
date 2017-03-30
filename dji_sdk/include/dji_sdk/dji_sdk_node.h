@@ -62,7 +62,7 @@ private:
 	dji_sdk::A3GPS A3_GPS;
 	dji_sdk::A3RTK A3_RTK;
 // Declare Time translator
-    boost::shared_ptr<cuckoo_time_translator::DeviceTimeUnwrapperAndTranslator> device_time_translator_; // TODO: Why does this have to be a boost::shared_ptr ?
+    boost::shared_ptr<cuckoo_time_translator::DefaultDeviceTimeUnwrapperAndTranslator> device_time_translator_; // TODO: Why does this have to be a boost::shared_ptr ?
 
 
 	bool activation_result = false;
