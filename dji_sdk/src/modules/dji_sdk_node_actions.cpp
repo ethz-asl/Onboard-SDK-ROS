@@ -75,7 +75,7 @@ bool DJISDKNode::process_waypoint(dji_sdk::Waypoint new_waypoint)
         waypoint_navigation_feedback.altitude_progress = altitude_progress;
         waypoint_navigation_action_server->publishFeedback(waypoint_navigation_feedback);
 
-        usleep(20000);
+        usleep(2000);
 
     }
     ros::Duration(new_waypoint.staytime).sleep();
@@ -137,8 +137,8 @@ bool DJISDKNode::local_position_navigation_action_callback(const dji_sdk::LocalP
   float det_x, det_y, det_z;
 
   DJI::onboardSDK::FlightData flight_ctrl_data;
-  flight_ctrl_data.flag = 0x90;
-  flight_ctrl_data.z = dst_z;
+  flight_ctrl_data.flag = 0x81;
+  
   flight_ctrl_data.yaw = 0;
 
   int x_progress = 0; 
@@ -146,8 +146,9 @@ bool DJISDKNode::local_position_navigation_action_callback(const dji_sdk::LocalP
   int z_progress = 0; 
   while (x_progress < 100 || y_progress < 100 || z_progress <100) {
 
-     flight_ctrl_data.x = dst_x - local_position.x;
-     flight_ctrl_data.y = dst_y - local_position.y;
+     flight_ctrl_data.x = dst_x - local_position.x -velocity.vx;
+     flight_ctrl_data.y = dst_y - local_position.y- velocity.vy;
+     flight_ctrl_data.z = dst_z - local_position.z -velocity.vz;
      rosAdapter->flight->setFlight(&flight_ctrl_data);
 
      det_x = (100 * (dst_x - local_position.x)) / dis_x;
@@ -168,7 +169,7 @@ bool DJISDKNode::local_position_navigation_action_callback(const dji_sdk::LocalP
      local_position_navigation_feedback.z_progress = z_progress;
      local_position_navigation_action_server->publishFeedback(local_position_navigation_feedback);
 
-     usleep(20000);
+     usleep(2000);
   }
 
   local_position_navigation_result.result = true;
@@ -237,7 +238,7 @@ bool DJISDKNode::global_position_navigation_action_callback(const dji_sdk::Globa
         global_position_navigation_feedback.altitude_progress = altitude_progress;
         global_position_navigation_action_server->publishFeedback(global_position_navigation_feedback);
 
-        usleep(20000);
+        usleep(2000);
 
     }
 

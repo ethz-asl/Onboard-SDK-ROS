@@ -190,7 +190,7 @@ def main():
             drone.stop_video()
         elif main_operate_code == 'm':
             # Local Navi Test 
-            drone.local_position_navigation_send_request(-25, -55, 20)
+            drone.local_position_navigation_send_request(-30, -30, 15)
         elif main_operate_code == 'n':
             # GPS Navi Test 
             drone.global_position_navigation_send_request(22.535, 113.95, 100)
