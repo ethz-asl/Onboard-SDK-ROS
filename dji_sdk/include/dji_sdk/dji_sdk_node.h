@@ -119,8 +119,8 @@ private:
     void init_subscribers(ros::NodeHandle& nh)
     {
       external_transform_subscriber = nh.subscribe<geometry_msgs::TransformStamped>("dji_sdk/external_transform",10, &DJISDKNode::external_transform_subscriber_callback, this);
-      cmd_sub_=nh.subscribe("/flourish/fcu/command/roll_pitch_yawrate_thrust",1,&DJISDKNode::cmdCallBack,this,ros::TransportHints().tcpNoDelay());
-      key_sub_=nh.subscribe("/flourish/keyboard/keydown",1,&DJISDKNode::keyboardCallBack,this,ros::TransportHints().tcpNoDelay());
+      cmd_sub_=nh.subscribe("fcu/command/roll_pitch_yawrate_thrust",1,&DJISDKNode::cmdCallBack,this,ros::TransportHints().tcpNoDelay());
+      key_sub_=nh.subscribe("keyboard/keydown",1,&DJISDKNode::keyboardCallBack,this,ros::TransportHints().tcpNoDelay());
       //joy_sub_=nh.subscribe("/flourish/joy",1,&DJISDKNode::joyCallBack,this,ros::TransportHints().tcpNoDelay());
     }
 
@@ -144,7 +144,7 @@ private:
         time_stamp_publisher = nh.advertise<dji_sdk::TimeStamp>("dji_sdk/time_stamp", 10);
 	data_received_from_remote_device_publisher = nh.advertise<dji_sdk::TransparentTransmissionData>("dji_sdk/data_received_from_remote_device",10);
         imu_msg_publisher = nh.advertise<sensor_msgs::Imu>("dji_sdk/imu", 1);
-        vc_cmd_pub_=nh.advertise<mav_msgs::RollPitchYawrateThrust>("/flourish/vc_cmd",1);
+        vc_cmd_pub_=nh.advertise<mav_msgs::RollPitchYawrateThrust>("dji_sdk/vc_cmd",1);
 	//TODO: Identify the drone version first	
 	A3_GPS_info_publisher = nh.advertise<dji_sdk::A3GPS>("dji_sdk/A3_GPS", 10);
 	A3_RTK_info_publisher = nh.advertise<dji_sdk::A3RTK>("dji_sdk/A3_RTK", 10);
