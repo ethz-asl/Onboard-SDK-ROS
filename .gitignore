@@ -2,4 +2,5 @@
 *.swn
 *.swo
 *.swp
+.vscode/
 build.sh

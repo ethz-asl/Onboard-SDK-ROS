@@ -18,6 +18,7 @@
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <sensor_msgs/Imu.h>
+#include <sensor_msgs/NavSatFix.h>
 #include <boost/bind.hpp>
 #include <dji_sdk/dji_sdk.h>
 #include <actionlib/server/simple_action_server.h>
@@ -25,13 +26,14 @@
 #include <mav_msgs/RollPitchYawrateThrust.h>
 #include "keyboard/Key.h"
 #include <sensor_msgs/Joy.h>
+#include <cuckoo_time_translator/DeviceTimeTranslator.h>
 
 #define C_EARTH (double) 6378137.0
 #define C_PI (double) 3.141592653589793
 #define DEG2RAD(DEG) ((DEG)*((C_PI)/(180.0)))
 
 extern DJI::onboardSDK::ROSAdapter *rosAdapter;
-using namespace DJI::onboardSDK;
+using namespace DJI::onboardSDK;    //TODO:remove namespaces from headers 
 
 class DJISDKNode
 {
@@ -54,8 +56,11 @@ private:
     nav_msgs::Odometry odometry;
 	dji_sdk::TimeStamp time_stamp;
     sensor_msgs::Imu imu_msg;
+    sensor_msgs::NavSatFix gps_msg;
 	dji_sdk::A3GPS A3_GPS;
 	dji_sdk::A3RTK A3_RTK;
+// Declare Time translator
+    boost::shared_ptr<cuckoo_time_translator::DeviceTimeUnwrapperAndTranslator> device_time_translator_; // TODO: Why does this have to be a boost::shared_ptr ?
 
 
 	bool activation_result = false;
@@ -89,6 +94,7 @@ private:
 
 // Add ROS compatible message publishers
     ros::Publisher imu_msg_publisher;
+    ros::Publisher gps_msg_publisher;
 
     ros::Subscriber external_transform_subscriber;
     ros::Subscriber cmd_sub_;
@@ -144,6 +150,7 @@ private:
         time_stamp_publisher = nh.advertise<dji_sdk::TimeStamp>("dji_sdk/time_stamp", 10);
 	data_received_from_remote_device_publisher = nh.advertise<dji_sdk::TransparentTransmissionData>("dji_sdk/data_received_from_remote_device",10);
         imu_msg_publisher = nh.advertise<sensor_msgs::Imu>("dji_sdk/imu", 1);
+        gps_msg_publisher = nh.advertise<sensor_msgs::NavSatFix>("dji_sdk/gps", 1);
         vc_cmd_pub_=nh.advertise<mav_msgs::RollPitchYawrateThrust>("/flourish/vc_cmd",1);
 	//TODO: Identify the drone version first	
 	A3_GPS_info_publisher = nh.advertise<dji_sdk::A3GPS>("dji_sdk/A3_GPS", 10);

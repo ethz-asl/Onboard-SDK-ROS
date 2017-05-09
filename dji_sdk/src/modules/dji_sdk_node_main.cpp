@@ -14,11 +14,23 @@
 #include <functional>
 #include <dji_sdk/DJI_LIB_ROS_Adapter.h>
 #include <tf/transform_broadcaster.h>
+#include <iomanip>
+#include <cuckoo_time_translator/DeviceTimeTranslator.h>
+#include <stdint.h>
+
 
 //----------------------------------------------------------
 // timer spin_function 50Hz
 //----------------------------------------------------------
 using namespace std;
+    
+// TODO: Fix temporary hack for getting hardware timestamps using nanoTime
+// should not be defined globally
+auto g_counter = 0;
+const auto g_WRAP_TIME = 4.295;     //seconds
+uint32_t g_prevNanoTime = 0;
+long double g_hardwareStamp;
+    
 void DJISDKNode::transparent_transmission_callback(uint8_t *buf, uint8_t len)
 {
 	dji_sdk::TransparentTransmissionData transparent_transmission_data;
@@ -39,11 +51,27 @@ void DJISDKNode::broadcast_callback()
    
     auto current_time = ros::Time::now();
 
+
+
     if(msg_flags & HAS_TIME){
+
+        // Only this message containes the received time in the header and the hardware time within the message
+        // All following messages should have translated hardware times in the header.
         time_stamp.header.frame_id = "/time";
         time_stamp.header.stamp = current_time;
-        time_stamp.time = bc_data.timeStamp.time;
-        time_stamp.time_ns = bc_data.timeStamp.nanoTime;
+
+        if(device_time_translator_){
+        current_time = device_time_translator_->update(bc_data.timeStamp.time, current_time, 0.0); // estimated offset is 0.0 for now observed to usuall be < 2 ms can be upto ~ 20 ms!!!
+        //cout << setprecision(15) <<setw(30) << "Translated HW Time Offset: " << current_time.toSec() - ros::Time::now().toSec() << endl;
+        }
+        time_stamp.time = bc_data.timeStamp.time;  // This is now in units of 1/400 s
+        time_stamp.time_ns = bc_data.timeStamp.nanoTime; // This is perhaps more accurate??? But requires handling the wrapping after every 4.295 secs. DO NOT SUM both as it leads to double counting.
+        if(bc_data.timeStamp.nanoTime < ::g_prevNanoTime){
+            ::g_counter++;
+        }
+        g_hardwareStamp = ::g_counter*::g_WRAP_TIME + double(bc_data.timeStamp.nanoTime)*(1e-9);
+        ::g_prevNanoTime = bc_data.timeStamp.nanoTime;
+        //cout << setprecision(15) <<setw(30) << "HW Time: " << g_hardwareStamp << endl; //TODO: Publish instead of printing, seems to drift by about 1ms every ~ 50s
         time_stamp.sync_flag = bc_data.timeStamp.syncFlag;
         time_stamp_publisher.publish(time_stamp);
     }
@@ -66,7 +94,9 @@ void DJISDKNode::broadcast_callback()
 	//update Imu message
 		if ( (msg_flags & HAS_Q) && (msg_flags & HAS_W) && (msg_flags & HAS_A) ) {
 				imu_msg.header.frame_id = "/world";
+                // Use translated hardware time
 				imu_msg.header.stamp = current_time;
+                // Convert from NED to ENU frame
 				imu_msg.orientation.w = bc_data.q.q0;
 				imu_msg.orientation.x = bc_data.q.q1;
 				imu_msg.orientation.y = -bc_data.q.q2;
@@ -91,7 +121,7 @@ void DJISDKNode::broadcast_callback()
 				imu_msg_publisher.publish(imu_msg);
 		}
 
-    //update global_position msg
+    //update global_position and gps msg
     if (msg_flags & HAS_POS) {
         global_position.header.frame_id = "/world";
         global_position.header.stamp = current_time;
@@ -102,6 +132,14 @@ void DJISDKNode::broadcast_callback()
         global_position.altitude = bc_data.pos.altitude;
         global_position.health = bc_data.pos.health;
         global_position_publisher.publish(global_position);
+
+        // Update gps mesage
+        gps_msg.header.frame_id = "/world";
+        gps_msg.header.stamp = current_time;
+        gps_msg.latitude = bc_data.pos.latitude * 180.0 / C_PI;
+        gps_msg.longitude = bc_data.pos.longitude * 180.0 / C_PI;
+        gps_msg.altitude = bc_data.pos.altitude;
+        gps_msg_publisher.publish(gps_msg);
 
         //TODO:
         // FIX BUG about flying at lat = 0
@@ -509,11 +547,21 @@ DJISDKNode::DJISDKNode(ros::NodeHandle& nh, ros::NodeHandle& nh_private) : dji_s
     init_services(nh);
     init_actions(nh);
 	init_subscribers(nh);
+    // Init time stamp translator
+    device_time_translator_.reset(new cuckoo_time_translator::DeviceTimeUnwrapperAndTranslator(
+          cuckoo_time_translator::TimestampUnwrapper(
+            UINT32_MAX, // offset at every overflow of containing uint32_t
+            400 // at 400Hz
+          ),
+          nh
+        )
+    );
 
     init_parameters(nh_private);
 
     fc_status_=0;
     vc_status_=0;
+    //TODO: Inkyu, these parameters should be read from a config file
     //obtained from nonlinear optimization.
     rollScale_=0.000865;
     pitchScale_=0.000844;

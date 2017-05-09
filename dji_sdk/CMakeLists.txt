@@ -26,6 +26,7 @@ find_package(catkin REQUIRED COMPONENTS
   mav_msgs
   keyboard
   joy
+  cuckoo_time_translator
 )
 
 ## System dependencies are found with CMake's conventions
