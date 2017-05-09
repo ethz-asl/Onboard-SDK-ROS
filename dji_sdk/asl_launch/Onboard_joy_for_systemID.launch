@@ -1,0 +1,30 @@
+<launch>
+  <arg name="mav_name" default="falcon2"/>
+  <arg name="namespace" default="$(arg mav_name)" />
+
+  <rosparam file="$(find dji_sdk)/resources/capabilities.yaml"/>
+
+  <group ns="$(arg namespace)" >
+    <node name="dji_sdk" pkg="dji_sdk" type="dji_sdk_node" output="screen">
+		<!-- node parameters -->
+		<param name="serial_name" type="string" value="/dev/ttyUSB0"/>
+		<!-- <param name="baud_rate" type="int" value="230400"/> -->
+		<param name="baud_rate" type="int" value="921600"/>
+
+		<param name="app_id" type="int" value="1027253"/>
+		<param name="app_version" type="int" value="1"/>
+		<param name="app_bundle_id" type="string" value="Welcome to use dji-sdk"/>
+		<param name="enc_key" type="string" value="2267d8cc7874b641a2d16798afb659ba4876b5dfd9b0a0e471c00e188b5c9ed3"/>
+		<param name="groundstation_enable" type="int" value="1"/>
+    <remap from="fcu/command/roll_pitch_yawrate_thrust" to="command/roll_pitch_yawrate_thrust" />
+	</node>
+
+    <node name="joy_for_sys_id" pkg="joy" type="joy_node" output="screen">
+      <param name="autorepeat_rate" type="double" value="15"/>
+      <param name="deadzone" type="double" value="0.01"/>
+    </node>
+
+    <node name="rotors_joy_interface_for_m100" pkg="rotors_joy_interface" type="rotors_joy_interface" output="screen">
+    </node>
+  </group>
+</launch>
