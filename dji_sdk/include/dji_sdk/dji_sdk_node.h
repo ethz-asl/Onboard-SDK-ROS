@@ -121,7 +121,6 @@ private:
       external_transform_subscriber = nh.subscribe<geometry_msgs::TransformStamped>("dji_sdk/external_transform",10, &DJISDKNode::external_transform_subscriber_callback, this);
       cmd_sub_=nh.subscribe("fcu/command/roll_pitch_yawrate_thrust",1,&DJISDKNode::cmdCallBack,this,ros::TransportHints().tcpNoDelay());
       key_sub_=nh.subscribe("keyboard/keydown",1,&DJISDKNode::keyboardCallBack,this,ros::TransportHints().tcpNoDelay());
-      //joy_sub_=nh.subscribe("/flourish/joy",1,&DJISDKNode::joyCallBack,this,ros::TransportHints().tcpNoDelay());
     }
 
     void init_publishers(ros::NodeHandle& nh)
