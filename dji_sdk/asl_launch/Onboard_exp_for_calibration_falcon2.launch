@@ -1,0 +1,43 @@
+<launch>
+  <arg name="mav_name" default="falcon2"/>
+  <arg name="namespace" default="$(arg mav_name)" />
+  <rosparam file="$(find dji_sdk)/resources/capabilities.yaml"/>
+  <group ns="$(arg namespace)" >
+  
+    <node name="dji_sdk" pkg="dji_sdk" type="dji_sdk_node" output="screen">
+      <param name="serial_name" type="string" value="/dev/ttyUSB0"/>
+      <param name="baud_rate" type="int" value="921600"/>
+      <param name="app_id" type="int" value="1040678"/>
+      <param name="app_version" type="int" value="1"/>
+      <param name="app_bundle_id" type="string" value="Welcome to use dji-sdk"/>
+      <param name="enc_key" type="string" value="a41335b074411eb3408029cd0955324df2d3b84e5c0d80ed8344ae5c34e05cb2"/>
+      <param name="groundstation_enable" type="int" value="1"/>
+    </node>
+
+    <node pkg="realsense_ros" type="zr300node" name="realsense_zr300">
+      <param name="imu/intrinsics_yaml" value="$(find dji_sdk)/resources/sensors/intel2/realsense.yaml"/>
+      <param name="imu/publish_sensors_inidividually" value="false"/>
+
+      <param name="depth/width" value="640"/>
+      <param name="depth/height" value="480"/>
+      <param name="depth/fps" value="30"/>
+      <param name="depth/enabled" value="false"/>
+      <param name="depth/subsample_factor" value="3"/>
+
+      <param name="infrared/enabled" value="false"/>
+
+      <param name="color/width" value="640"/>
+      <param name="color/height" value="480"/>
+      <param name="color/fps" value="30"/>
+      <param name="color/enabled" value="false"/>
+      <param name="color/subsample_factor" value="3"/>
+
+      <param name="fisheye/width" value="640"/>
+      <param name="fisheye/height" value="480"/>
+      <param name="fisheye/fps" value="30"/>
+      <param name="fisheye/enabled" value="true"/>
+      <param name="fisheye/subsample_factor" value="1"/>
+      <param name="pointcloud/enabled" value="false"/>
+    </node>
+  </group>
+</launch>
