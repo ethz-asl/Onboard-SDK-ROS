@@ -15,6 +15,7 @@ Camera0
   qCM_y  0.00445213339269                               Y-entry of IMU to Camera quaterion (Hamilton)
   qCM_z  -0.00877787785881                               Z-entry of IMU to Camera quaterion (Hamilton)
   qCM_w  0.999945472892                               W-entry of IMU to Camera quaterion (Hamilton)
+  
   MrMC_x 0.00872824823522                               X-entry of IMU to Camera vector (expressed in IMU CF) [m]
   MrMC_y 0.00488656622539                               Y-entry of IMU to Camera vector (expressed in IMU CF) [m]
   MrMC_z 0.00656756962179                               Z-entry of IMU to Camera vector (expressed in IMU CF) [m]

@@ -18,7 +18,7 @@
 	</node>
 
     <node name="joy_for_sys_id" pkg="joy" type="joy_node" output="screen">
-      <param name="autorepeat_rate" type="double" value="100"/>
+      <param name="autorepeat_rate" type="double" value="50"/>
       <param name="deadzone" type="double" value="0.01"/>
     </node>
 
