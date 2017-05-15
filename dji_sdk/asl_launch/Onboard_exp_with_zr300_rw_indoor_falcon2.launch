@@ -63,11 +63,16 @@
       <param name="world_frame" value="odom"/>
       <param name="capability_group" value="Rovio" />
     </node>
+    
     <!-- Init Rovio Yaw-->
     <node pkg="rovio" type="init_rovio_enu.py" name="init_rovio_enu" output="screen">
       <remap from="mag_imu" to="dji_sdk/imu" />
     </node>
+
     <?ignore
+    <node pkg="tf" type="static_transform_publisher" name="world_to_odom" args="0 0 0 0 0 0 1  /world /odom 100"/>
+    ?>
+
     <node name="waypoint_navigator_node" pkg="waypoint_navigator" type="waypoint_navigator_node"  respawn="true" clear_params="true" output="screen">
       <rosparam file="$(find dji_sdk)/resources/trajectory_exp_m100_rect_1m.yaml"/>
       <param name="mav_name" type="string" value="$(arg namespace)" />
