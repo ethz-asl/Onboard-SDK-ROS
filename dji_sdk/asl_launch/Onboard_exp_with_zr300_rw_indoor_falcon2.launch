@@ -69,20 +69,18 @@
       <remap from="mag_imu" to="dji_sdk/imu" />
     </node>
 
-    <?ignore
+    
     <node pkg="tf" type="static_transform_publisher" name="world_to_odom" args="0 0 0 0 0 0 1  /world /odom 100"/>
-    ?>
+    
 
     <node name="waypoint_navigator_node" pkg="waypoint_navigator" type="waypoint_navigator_node"  respawn="true" clear_params="true" output="screen">
       <rosparam file="$(find dji_sdk)/resources/trajectory_exp_m100_rect_1m.yaml"/>
       <param name="mav_name" type="string" value="$(arg namespace)" />
       <!-- Real -->
-      <!-- remap from="odometry" to="msf_core/odometry" / -->
+      <remap from="odometry" to="msf_core/odometry" />
       <!-- Simulation -->
       <!-- <remap from="odometry" to="ground_truth/odometry" /> -->
-      <remap from="odometry" to="msf_core/odometry" />
     </node>
-    <node name="trajectory_sampling" pkg="mav_planning_utils" type="trajectory_sampling_node" output="screen" />
-    ?>
+    <node name="trajectory_sampler" pkg="mav_trajectory_generation_ros" type="trajectory_sampler_node" output="screen" />
   </group>
 </launch>

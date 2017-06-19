@@ -16,8 +16,8 @@ intermediate_pose_separation: 0.5
 waypoint_achievement_distance: 0.5
 
 # Maximum speed [m/s] and acceleration [m/s^2]
-reference_speed: 0.5
-reference_acceleration: 1
+reference_speed: 0.25
+reference_acceleration: 0.5
 
 # Height for takeoff command [m]
 takeoff_height: 1
