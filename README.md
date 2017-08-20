@@ -1,1 +1,3 @@
-A complete description of this repository is available on our [Wiki page](https://github.com/ethz-asl/dji_onboard_sdk_ros/wiki)
+This repo is deprecated and won't be updated.
+Please use our new repo from https://github.com/ethz-asl/mav_dji_ros_interface
+Thank you for your understanding.
