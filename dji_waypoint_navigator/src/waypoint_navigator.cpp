@@ -10,7 +10,9 @@ using namespace DJI::onboardSDK;
 static void Display_Main_Menu(void)
 {
   printf("Press 'a' to take-off.\n");
-  printf("Press 'b' to start the mission.\n");
+  printf("Press 'b' to start the DJI waypoint mission.\n");
+  printf("Press 'c' to start the action server waypoint mission.\n");
+  printf("Press 'e' to exit.\n");
 }
 
 int main(int argc, char **argv)
@@ -36,7 +38,9 @@ int main(int argc, char **argv)
   DJIDrone* drone = new DJIDrone(nh);
 
   dji_sdk::MissionWaypointTask waypoint_task;
-	dji_sdk::MissionWaypoint waypoint;
+  dji_sdk::MissionWaypoint waypoint;
+  dji_sdk::WaypointList actionWaypointList;
+  dji_sdk::Waypoint actionWaypoint; 
 
   waypoint_task.velocity_range = velocity_range;
   waypoint_task.idle_velocity = 3;
@@ -60,28 +64,39 @@ int main(int argc, char **argv)
     waypoint_task.mission_waypoint.push_back(waypoint);
   }
 
+    // Create list of waypoints to visit with action server.
+  for (int i = 0; i < easting.size(); i++) {
+    actionWaypoint.latitude = northing[i];
+    actionWaypoint.longitude = easting[i];
+    actionWaypoint.altitude = height[i];
+    actionWaypointList.waypoint_list.push_back(actionWaypoint);
+  }
+
   drone->request_sdk_permission_control();
   printf("Control requested.\n");
-  drone->mission_waypoint_upload(waypoint_task);
-  printf("Mission uploaded.\n");
 
-  Display_Main_Menu();
 
-  while (1) {
-
-    printf("Press 'a' to take-off.\n");
-    printf("Press 'b' to start the mission.\n");
+  while (ros::ok()) {
     ros::spinOnce();
+    Display_Main_Menu();
     temp32 = getchar();
 
     if (temp32 == 'a') {
       drone->takeoff();
     }
     else if (temp32 == 'b') {
+      drone->mission_waypoint_upload(waypoint_task);
+      printf("Mission uploaded. Starting DJI Waypoint Mission\n");
       drone->mission_start();
     }
-
-    Display_Main_Menu();
+    else if (temp32 == 'c') {
+      printf("Starting Action Server Waypoint Mission\n");
+      drone->waypoint_navigation_send_request(actionWaypointList);
+    }
+    else if (temp32 == 'e') {
+      /*exit*/
+      return 0;
+    }
     
   }
   return 0;

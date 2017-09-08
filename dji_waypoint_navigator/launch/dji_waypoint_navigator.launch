@@ -1,6 +1,6 @@
 <launch>
 
-  <arg name="namespace" default="flourish"/>
+  <arg name="namespace" default="falcon"/>
 
   <group ns="$(arg namespace)">
 
@@ -20,9 +20,6 @@
 
     <node pkg="dji_waypoint_navigator" type="dji_waypoint_navigator" name="dji_waypoint_navigator" output="screen">
       <rosparam file="$(find dji_waypoint_navigator)/params/trajectory_sugarbeet.yaml"/>
-    </node>
-
-    <node pkg="dji_sdk_dji2ros" type="dji2ros_wrapper.py" name="dji2ros_wrapper" output="screen">
     </node>
 
   </group>
