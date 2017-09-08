@@ -1,3 +1,14 @@
+/** @file dji_sdk_node_mission.cpp
+ *  @version 3.1.8
+ *  @date July 29th, 2016
+ *
+ *  @brief
+ *  All the mission callbacks are implemented here.
+ *
+ *  @copyright 2016 DJI. All rights reserved.
+ *
+ */
+
 #include <dji_sdk/dji_sdk_mission.h>
 
 DJI::onboardSDK::HotPointData new_hotpoint = {0};
@@ -48,7 +59,7 @@ bool DJISDKMission::mission_start_callback(dji_sdk::MissionStart::Request& reque
 			new_hotpoint.longitude = hotpoint_task.longitude;
 			new_hotpoint.height = hotpoint_task.altitude;
 			new_hotpoint.radius = hotpoint_task.radius;
-			new_hotpoint.palstance = hotpoint_task.angular_speed;
+			new_hotpoint.yawRate = hotpoint_task.angular_speed;
 			new_hotpoint.clockwise = hotpoint_task.is_clockwise;
 			new_hotpoint.startPoint = hotpoint_task.start_point;
 			new_hotpoint.yawMode = hotpoint_task.yaw_mode;
@@ -67,7 +78,7 @@ bool DJISDKMission::mission_start_callback(dji_sdk::MissionStart::Request& reque
 			new_follow.target.angle = 0; //unused param
 			new_follow.sensitivity = followme_task.sensitivity;
 			rosAdapter->followme->setData(new_follow);
-			rosAdapter->followme->start();
+			rosAdapter->followme->start(0,0,0);
 
 			break;
 
@@ -189,7 +200,7 @@ bool DJISDKMission::mission_wp_upload_callback(dji_sdk::MissionWpUpload::Request
 	rosAdapter->waypoint->init(&new_task);
 	printf("uploaded the task with %d waypoints\n", new_task.indexNumber);
 
-	sleep(2);
+	sleep(0.2);
 
 	int i = 0;
 	for (auto waypoint:waypoint_task.mission_waypoint) {
@@ -213,7 +224,7 @@ bool DJISDKMission::mission_wp_upload_callback(dji_sdk::MissionWpUpload::Request
 		rosAdapter->waypoint->uploadIndexData(&new_waypoint);
 		printf("uploaded the %dth waypoint\n", new_waypoint.index);
 		i+=1;
-		sleep(2);
+		sleep(0.2);
 	}
 	
 	current_type = MissionType::WAYPOINT;
@@ -270,7 +281,7 @@ bool DJISDKMission::mission_hp_set_speed_callback(dji_sdk::MissionHpSetSpeed::Re
 		printf("Not in Hotpoint Mode!\n");
 		return false;
 	}
-	rosAdapter->hotpoint->updatePalstance(request.speed, request.direction);
+	rosAdapter->hotpoint->updateYawRate(request.speed, request.direction);
 
 	return true;
 
@@ -339,9 +350,9 @@ bool DJISDKMission::mission_fm_set_target_callback(dji_sdk::MissionFmSetTarget::
 DJISDKMission::DJISDKMission(ros::NodeHandle& nh)
 {
 	init_missions(nh);
-
-    rosAdapter->setMissionStatusCallback(&DJISDKMission::mission_status_callback, this);
-    rosAdapter->setMissionEventCallback(&DJISDKMission::mission_event_callback, this);
+		//IKS Buffer overflow crash.
+    //rosAdapter->setMissionStatusCallback(&DJISDKMission::mission_status_callback, this);
+    //rosAdapter->setMissionEventCallback(&DJISDKMission::mission_event_callback, this);
 
 }
 

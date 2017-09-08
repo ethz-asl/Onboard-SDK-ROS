@@ -1,0 +1,12 @@
+<launch>
+  <arg name="mav_name" default="flourish"/>
+  <arg name="object_name" default="$(arg mav_name)"/>
+  <arg name="namespace" default="$(arg mav_name)" />
+  
+<group ns="$(arg namespace)">
+  <node pkg="tf" type="static_transform_publisher" name="vicon_broadcaster" args="0 0 0 0 0 0 1 world vicon 100" />
+  <node pkg="keyboard" type="keyboard" name="keyboard"/>
+  <node pkg="rqt_gui" type="rqt_gui" name="flourish_rqt"/>
+</group>
+
+</launch>

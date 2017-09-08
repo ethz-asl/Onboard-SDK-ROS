@@ -163,21 +163,21 @@ def main():
                 vx = V * math.sin((V/R)*i/50.0)
                 vy = V * math.cos((V/R)*i/50.0)
     
-                drone.attitude_control(DJIDrone.HORIZ_POS|DJIDrone.VERT_VEL|DJIDrone.YAW_ANG|DJIDrone.HORIZ_BODY|DJIDrone.STABLE_ON, vx, vy, 0, 0)
+                drone.attitude_control(DJIDrone.HORIZ_ATT|DJIDrone.VERT_TRU|DJIDrone.YAW_RATE|DJIDrone.HORIZ_BODY|DJIDrone.STABLE_ON, vx, vy, 0, 0)
                 time.sleep(0.02)
         elif main_operate_code == 'i':
             # draw square sample
             for i in range(60):
-                drone.attitude_control(DJIDrone.HORIZ_POS|DJIDrone.VERT_VEL|DJIDrone.YAW_ANG|DJIDrone.HORIZ_BODY|DJIDrone.STABLE_ON, 3, 3, 0, 0)
+                drone.attitude_control(DJIDrone.HORIZ_ATT|DJIDrone.VERT_TRU|DJIDrone.YAW_RATE|DJIDrone.HORIZ_BODY|DJIDrone.STABLE_ON, 10, 10, 50, 50)
                 time.sleep(0.02)
             for i in range(60):
-                drone.attitude_control(DJIDrone.HORIZ_POS|DJIDrone.VERT_VEL|DJIDrone.YAW_ANG|DJIDrone.HORIZ_BODY|DJIDrone.STABLE_ON, -3, 3, 0, 0)
+                drone.attitude_control(DJIDrone.HORIZ_ATT|DJIDrone.VERT_TRU|DJIDrone.YAW_RATE|DJIDrone.HORIZ_BODY|DJIDrone.STABLE_ON, -10, 10, 50, -50)
                 time.sleep(0.02)
             for i in range(60):
-                drone.attitude_control(DJIDrone.HORIZ_POS|DJIDrone.VERT_VEL|DJIDrone.YAW_ANG|DJIDrone.HORIZ_BODY|DJIDrone.STABLE_ON, -3, -3, 0, 0)
+                drone.attitude_control(DJIDrone.HORIZ_ATT|DJIDrone.VERT_TRU|DJIDrone.YAW_RATE|DJIDrone.HORIZ_BODY|DJIDrone.STABLE_ON, -10, -10, 20, 100)
                 time.sleep(0.02)
             for i in range(60):
-                drone.attitude_control(DJIDrone.HORIZ_POS|DJIDrone.VERT_VEL|DJIDrone.YAW_ANG|DJIDrone.HORIZ_BODY|DJIDrone.STABLE_ON, 3, -3, 0, 0)
+                drone.attitude_control(DJIDrone.HORIZ_ATT|DJIDrone.VERT_TRU|DJIDrone.YAW_RATE|DJIDrone.HORIZ_BODY|DJIDrone.STABLE_ON, 10, -10, 20, -100)
                 time.sleep(0.02)
         elif main_operate_code == 'j':
             # take a picture
@@ -190,18 +190,18 @@ def main():
             drone.stop_video()
         elif main_operate_code == 'm':
             # Local Navi Test 
-            drone.local_position_navigation_send_request(-100, -100, 100)
+            drone.local_position_navigation_send_request(2, 2, 2)
         elif main_operate_code == 'n':
             # GPS Navi Test 
-            drone.global_position_navigation_send_request(22.535, 113.95, 100)
+            drone.global_position_navigation_send_request(47.453184, 8.68028, 20)
         elif main_operate_code == 'o':
             # Waypoint List Navi Test 
             newWaypointList = [
-                dji_sdk.msg.Waypoint(latitude = 22.535, longitude = 113.95, altitude = 100, staytime = 5, heading = 0),
-                dji_sdk.msg.Waypoint(latitude = 22.535, longitude = 113.96, altitude = 100, staytime = 0, heading = 90),
-                dji_sdk.msg.Waypoint(latitude = 22.545, longitude = 113.96, altitude = 100, staytime = 4, heading = -90),
-                dji_sdk.msg.Waypoint(latitude = 22.545, longitude = 113.96, altitude = 10, staytime = 2, heading = 180),
-                dji_sdk.msg.Waypoint(latitude = 22.525, longitude = 113.93, altitude = 50, staytime = 0, heading = -180)]
+                dji_sdk.msg.Waypoint(latitude = 47.535, longitude = 8.685, altitude = 10, staytime = 5, heading = 0),
+                dji_sdk.msg.Waypoint(latitude = 47.535, longitude = 8.686, altitude = 10, staytime = 0, heading = 90),
+                dji_sdk.msg.Waypoint(latitude = 47.545, longitude = 8.686, altitude = 20, staytime = 4, heading = -90),
+                dji_sdk.msg.Waypoint(latitude = 47.545, longitude = 8.686, altitude = 15, staytime = 2, heading = 180),
+                dji_sdk.msg.Waypoint(latitude = 47.525, longitude = 8.683, altitude = 15, staytime = 0, heading = -180)]
             drone.waypoint_navigation_send_request(newWaypointList)
         elif main_operate_code == 'p':
             drone.arm_drone()

@@ -1,9 +1,20 @@
+/** @file dji_sdk_node_services.cpp
+ *  @version 3.1.8
+ *  @date July 29th, 2016
+ *
+ *  @brief
+ *  All the purchase callbacks are implemented here.
+ *
+ *  @copyright 2016 DJI. All rights reserved.
+ *
+ */
+
 #include <dji_sdk/dji_sdk_node.h>
 
 
 bool DJISDKNode::activation_callback(dji_sdk::Activation::Request& request, dji_sdk::Activation::Response& response)
 {
-	rosAdapter->coreAPI->activate(&user_act_data, NULL);
+	rosAdapter->coreAPI->activate(&user_act_data);
 	response.result = true;
 	return true;
 }
@@ -206,7 +217,9 @@ bool DJISDKNode::velocity_control_callback(dji_sdk::VelocityControl::Request& re
 
 bool DJISDKNode::version_check_callback(dji_sdk::VersionCheck::Request& request, dji_sdk::VersionCheck::Response& response)
 {
-	rosAdapter->coreAPI->getVersion();
+    int sdkVer;
+    sdkVer = rosAdapter->coreAPI->getSDKVersion();
+    std::cout << std::hex << sdkVer << '\n';
 	response.result = true;
 	return true;
 }
@@ -217,6 +230,7 @@ bool DJISDKNode::virtual_rc_enable_control_callback(dji_sdk::VirtualRCEnableCont
     DJI::onboardSDK::VirtualRCSetting vrc_setting;
     vrc_setting.enable = request.enable;
     vrc_setting.cutoff = request.if_back_to_real;
+    printf("enable=%d if_back=%d\n",request.enable,request.if_back_to_real);
     rosAdapter->virtualRC->setControl((bool)request.enable, (DJI::onboardSDK::VirtualRC::CutOff)request.if_back_to_real);
 
     response.result = true;

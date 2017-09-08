@@ -1,122 +1,114 @@
-#DJI Onboard SDK ROS Packages
+DJI Onboard SDK ROS (3.2) Packages
+------
+We modified this package based on DJI Onboard SDK ROS (3.2) in ways that:
 
-----
+1. Increasing Baudrate from 230400 to 921600 bps in order to cope with increasted IMU publishing and sending virtual command rates (100Hz). (They were 50Hz).
 
-##Introduction
+2. Directly sending a control command (roll, pitch angles, yaw rate and vertical velocity) via serial port to N1 autopilot (original DJI M100 autopilot) in order to avoid using ROS service call for this. Note that ROS service call should not be used for continuous command data streams as suggested by [ROS communication patterns](http://wiki.ros.org/ROS/Patterns/Communication). (There are reasons behind this but most importantly it's a blocking call!).
 
-This is a ROS package for DJI OnBoard SDK.
+3. Publishing IMU and odomtery message topics (using ROS topic) using [ROS standard coordinate system](http://www.ros.org/reps/rep-0103.html) and [this](http://www.ros.org/reps/rep-0105.html).
 
-It helps users handle the following commands and actions.
+4. Fixing some buffer overflow error.
 
-* The activation
-* The flight control obtainment
-* The flight control release
-* The take off procedure
-* The landing procedure
-* The go home procedure
-* The Gimbal control
-* The attitude control
-* The photo taking procedure
-* The start/stop video recording procedure
-* The Virtual RC control
-* The broadcast frequency control
-* The arm/disarm control
-* The timestamp synchonization procedure
-* The native waypoint task implementation
-* The hotpoint task implementation
-* The follow-me task implementation
-* Local navigation (fly into a certain (X,Y,Z))
-* GPS navigation (fly into a certain GPS coordinate)
-* Naive waypoint navigation (fly through a series of GPS coordinates)
-* Using WebSocket together with Baidu Map for navigation 
-* Using MAVLink protocol and QGroundStation
+5. Some extra features such as deadzone recovery and auto-trim compensation. 
 
-##How to use
-1. Install and configure your hardware correctly.
-2. Enter the following info into `dji_sdk/launch/sdk_manifold.launch`.
-	* APP ID
-	* Communication Key
-	* Uart Device Name
-	* Baudrate
-3. Use `roslaunch dji_sdk sdk_manifold.launch` to start the core node.
-4. Include the `dji_drone.h` from `dji_sdk/include/dji_sdk` into your package and run it. (there also provides a python version `dji_drone.py` in `dji_sdk/src/dji_sdk`)
+Overview
+------
+This repository contains the modified version of DJI Onboard SDK ROS (3.2) that interfaces with ETH ASL software packages such as [MPC controller for MAV](https://github.com/ethz-asl/mav_control_rw/tree/devel/dji_m100_linear) and [Multi-Sensor Fusion framework](https://github.com/ethz-asl/ethzasl_msf).
 
+What you can achieve with these packages is your DJI M100 platform can follow your position commands or ~~trajectory~~. State estimation of MAV can be provided from any frameworks that you have, but here we used Motion capture device (Vicon) measurement for simplicity. The following diagram illustrates this.
 
-##System Structure
-* [dji_sdk](dji_sdk): the core package handling the communication with Matrice 100, which provides a header file `dji_drone.h` for future use
-* [dji_sdk_demo](dji_sdk_demo): an example package of using `dji_drone.h` to control the Matrice 100
-* [dji_sdk_web_groundstation](dji_sdk_web_groundstation): a WebSocket example using ROS-bridge-suite, where a webpage groundstatino is provided
-* [dji_sdk_read_cam](dji_sdk_read_cam): a X3 video decoding package for Manifold, CATKIN_IGNOREd by defualt
-* [dji_sdk_dji2mav](dji_sdk_dji2mav): a protocol converter making M100 compatiable with all MAVLink-protocol-dependent softwares
-* [dji_sdk_doc](dji_sdk_doc): all documents
+![System Diagram](https://drive.google.com/uc?export=view&id=0B-0CTsFowMRVUHVWWkRHak9HT1E)
 
-![image](dji_sdk_doc/structure.jpg)
-[click to see fullsize image](https://raw.githubusercontent.com/dji-sdk/Onboard-SDK-ROS/2.3/dji_sdk_doc/structure.jpg)
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=06Nic6D-A1w
+" target="_blank"><img src="https://drive.google.com/uc?export=view&id=0B-0CTsFowMRVMnc5Q3JMRFVmVGs" 
+alt="Demonstration video" width="400" height="225" border="10" /></a>
 
-##Read First
-[DJI SDK Challenge: Onboard SDK Part I](dji_sdk_doc/whatToKnowI.md)
+More technical details can be found from following [relevant publication section](https://github.com/ethz-asl/dji_onboard_sdk_ros/blob/3.2/README.md#relevant-publications-documentataion-and-citation).
 
-##System Environment
-The below environment has been tested.
-* Operating System: Ubuntu 14.04, Manifold
-* ROS version: ROS Indigo
+Hardware and software specifications used in this project
+------
+This section is underconstruction and will be updated shortly.
+* Hardware:
+* Software:
 
----
+Installation instructions
+------
+(If you already installed ROS on your system ([ROS installation](http://wiki.ros.org/indigo/Installation/Ubuntu), please skip step 1 and 2).
+We need two computers; an ordinary laptop (desktop) and onboard computer.
 
-#DJI Onboard SDK ROS例程
+1 Install and initialize ROS indigo desktop full, additional ROS packages, catkin-tools:
+```sh
+  $ sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu `lsb_release -sc` main" > /etc/apt/sources.list.d/ros-latest.list'
+  $ wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
+  $ sudo apt-get update
+  $ sudo apt-get install ros-indigo-desktop-full ros-indigo-joy python-wstool python-catkin-tools
+  $ sudo rosdep init
+  $ rosdep update
+  $ source /opt/ros/indigo/setup.bash
+```
+2 Initialize catkin workspace:
+```sh
+  $ mkdir -p ~/catkin_ws/src
+  $ cd ~/catkin_ws
+  $ catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release
+  $ catkin init  # initialize your catkin workspace
+```
+3.1 Laptop installation instructions
+```sh
+  $ git clone https://github.com/ethz-asl/ros_vrpn_client
+  $ git clone https://github.com/lrse/ros-keyboard
+```
 
-##简介
+3.2 Onboard computer installation instructions
+```sh
+  $ sudo apt-get install liblapacke-dev
+  $ git clone https://github.com/ethz-asl/dji_onboard_sdk_ros
+  $ git clone https://github.com/ethz-asl/mav_control_rw -b devel/dji_m100_linear
+  $ git clone https://github.com/ethz-asl/catkin_simple.git
+  $ git clone https://github.com/inkyusa/rotors_joy_inter_for_m100
+  $ git clone https://github.com/ethz-asl/mav_comm.git
+  $ git clone https://github.com/ethz-asl/eigen_catkin.git
+  $ git clone https://github.com/ethz-asl/ethzasl_msf.git
+```
 
-此ROS例程实现了以下功能：
+* Build the workspace
+Run following command at your catkin workspace root, '~/catkin_ws'
+```sh
+  $ catkin build
+```
 
-* 激活 Matrice100 （以下简称M100）
-* 获取 M100 控制权
-* 释放 M100 控制权
-* 向 M100 发送起飞指令
-* 向 M100 发送降落指令
-* 向 M100 发送返航指令
-* 对 M100 进行姿态控制
-* 对 M100 进行云台角度控制
-* 向 M100 发送相机控制指令
-* 向 M100 发送虚拟遥控指令
-* 向 M100 发送锁定/解锁指令
-* 向 M100 发送同步时间戳指令
-* 设置 M100 外发数据频率
-* 利用航点任务接口实现航点任务
-* 利用热点任务接口实现热点任务
-* 利用跟随任务接口实现跟随任务
-* 控制 M100 进行 (x,y,z) 坐标导航
-* 控制 M100 进行 GPS 坐标导航
-* 通过姿态控制指令实现 M100 的航点飞行任务
-* 通过 WebSocket 向 M100 发送网页地图生成的航点指令
-* 通过 MAVLink 和 QGroundControl 控制 M100
+M100 dynamic system identification
+------
+More explanations will be here. SysID example.
+```sh
+  $ git clone https://github.com/ethz-asl/mav_system_identification -b DJI_M100_sysID
+```
 
-##如何使用
+Relevant publications, documentataion, and citation
+------
+Please find 
+https://arxiv.org/abs/1701.08623
 
-1. 按照文档配置好 M100 
-2. 将激活信息输入至launch file：`dji_sdk/launch/sdk_manifold.launch`
-	* APP ID （在官网注册key后得到）
-	* Communication Key（在官网注册key后得到）
-	* Uart Device Name（串口设备名称）
-	* Baudrate（比特率）
-3. 运行 `roslaunch dji_sdk sdk_manifold.launch` 来启动核心包。
-4. 将 `dji_sdk/include/dji_sdk` 下的客户端头文件`dji_drone.h` 引用到你自己的 ROS 包中，并运行它（我们也提供了python版本的客户端`dji_drone.py`）
+When using these software packages in your research, we would be very happy and looking forward to hearing of your experiences (Hope this help you somehow). It would be nice for us if you could cite us as well!!
 
-##系统架构
-* [dji_sdk](dji_sdk): 核心 ROS 包，处理所有与 M100 的串口通信并提供了 `dji_drone.h`的头文件供开发者引用。
-* [dji_sdk_demo](dji_sdk_demo): 一个调用 `dji_drone.h` 控制 M100 的例子。
-* [dji_sdk_web_groundstation](dji_sdk_web_groundstation): 基于 WebSocket 的网页版地面站，依赖 ROS-bridge-suite 。
-* [dji_sdk_read_cam](dji_sdk_read_cam): Manifold专用 ROS 包，对禅思 X3 云台的视频信息进行解码输出视频流。默认通过`CATKIN_IGNORE`禁用，需要手动启用。
-* [dji_sdk_dji2mav](dji_sdk_dji2mav): MAVLink 协议转接器，使得 M100 可以支持任意使用 MAVLink 为协议的地面站软件。
-* [dji_sdk_doc](dji_sdk_doc): 所有的文档与图片信息。
+```bibtex
+@ARTICLE{2017M100Ctrl,
+          author = {{Sa}, I. and {Kamel}, M. and {Khanna}, R. and {Popovic}, M. and {Nieto}, J. {Siegwart}, R.},
+          title = "{Dynamic System Identification, and Control for a cost effective open-source VTOL MAV}",
+          archivePrefix = "arXiv",
+          eprint = {1701.08623},
+          primaryClass = "cs.RO",
+          keywords = {Computer Science - Robotics},
+          year = 2017,
+          month = Jan
+}
+```
 
-![image](dji_sdk_doc/structure.jpg)
-[点击查看大图](https://raw.githubusercontent.com/dji-sdk/Onboard-SDK-ROS/2.3/dji_sdk_doc/structure.jpg)
+More technical documentation
+------
+Since 8 pages of paper were insufficient to cope with technical details, we have written [technical documentation](http://goo.gl/sgh5C0) (This will move to wiki page of this repo shortly.)
 
-##Read First
-[DJI SDK Challenge: Onboard SDK Part I](dji_sdk_doc/whatToKnowI.md)
-
-#系统环境
-此 ROS 包在如下系统中进行测试；
-* 操作系统：Ubuntu 14.04， DJI Manifold
-* ROS 版本：ROS Indigo
+DJI Developer Website
+------
+DJI provides nice documentation including many features and examples of Onboard SDK ROS. Please have a look <https://developer.dji.com/onboard-sdk/documentation/github-platform-docs/ROS/README.html> for more information.

@@ -1,0 +1,25 @@
+<launch>
+  <arg name="mav_name" default="flourish"/>
+  <arg name="namespace" default="$(arg mav_name)" />
+  <arg name="dev" default="/dev/ttyUSB0"/>
+
+<group ns="$(arg namespace)">
+  <node pkg="keyboard" type="keyboard" name="keyboard"/>
+  <!-- <node pkg="rviz" type="fix_rviz" name="flourish_rviz" args="-d $(find mav_startup)/viz/flourish_exp.rviz"/> -->
+  <node pkg="rqt_gui" type="rqt_gui" name="flourish_rqt"/>
+
+  <node name="waypoint_navigator_node" pkg="waypoint_navigator" type="waypoint_navigator_node"  respawn="true" clear_params="true" output="screen">
+      <rosparam file="$(find waypoint_navigator)/paths/trajectory_exp_m100_rect_1m.yaml"/>
+      <param name="mav_name" type="string" value="$(arg namespace)" />
+      <!-- Real -->
+      <remap from="odometry" to="msf_core/odometry" />
+      <!-- Simulation -->
+      <!-- <remap from="odometry" to="ground_truth/odometry" /> -->
+      <!-- <remap from="odometry" to="dji_sdk/odometry" /> -->
+    </node>
+    <node name="trajectory_sampling" pkg="mav_planning_utils" type="trajectory_sampling_node" output="screen" />   
+    <node name="leica_interface" pkg="leica_interface" type="leica_node.py" output="screen" respawn="true" args="-b -l -p $(arg dev)">  
+    </node>
+</group>
+
+</launch>

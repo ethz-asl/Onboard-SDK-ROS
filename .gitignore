@@ -1,1 +1,7 @@
 ./CMakeLists.txt
+*.swn
+*.swo
+*.swp
+*.pyc
+.vscode/
+build.sh
