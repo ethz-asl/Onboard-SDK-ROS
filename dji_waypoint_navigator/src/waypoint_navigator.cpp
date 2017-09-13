@@ -35,12 +35,12 @@ int main(int argc, char **argv)
   private_nh.getParam("height", height);
   private_nh.getParam("waiting_time", waiting_time);
   private_nh.getParam("heading", heading);
-  DJIDrone* drone = new DJIDrone(nh);
+  DJIDrone *drone = new DJIDrone(nh);
 
   dji_sdk::MissionWaypointTask waypoint_task;
   dji_sdk::MissionWaypoint waypoint;
   dji_sdk::WaypointList actionWaypointList;
-  dji_sdk::Waypoint actionWaypoint; 
+  dji_sdk::Waypoint actionWaypoint;
 
   waypoint_task.velocity_range = velocity_range;
   waypoint_task.idle_velocity = 3;
@@ -52,7 +52,8 @@ int main(int argc, char **argv)
   waypoint_task.gimbal_pitch_mode = 0;
 
   // Create list of waypoints to visit.
-  for (int i = 0; i < easting.size(); i++) {
+  for (int i = 0; i < easting.size(); i++)
+  {
     waypoint.latitude = northing[i];
     waypoint.longitude = easting[i];
     waypoint.altitude = height[i];
@@ -64,8 +65,9 @@ int main(int argc, char **argv)
     waypoint_task.mission_waypoint.push_back(waypoint);
   }
 
-    // Create list of waypoints to visit with action server.
-  for (int i = 0; i < easting.size(); i++) {
+  // Create list of waypoints to visit with action server.
+  for (int i = 0; i < easting.size(); i++)
+  {
     actionWaypoint.latitude = northing[i];
     actionWaypoint.longitude = easting[i];
     actionWaypoint.altitude = height[i];
@@ -75,29 +77,32 @@ int main(int argc, char **argv)
   drone->request_sdk_permission_control();
   printf("Control requested.\n");
 
-
-  while (ros::ok()) {
+  while (ros::ok())
+  {
     ros::spinOnce();
     Display_Main_Menu();
     temp32 = getchar();
 
-    if (temp32 == 'a') {
+    if (temp32 == 'a')
+    {
       drone->takeoff();
     }
-    else if (temp32 == 'b') {
+    else if (temp32 == 'b')
+    {
       drone->mission_waypoint_upload(waypoint_task);
       printf("Mission uploaded. Starting DJI Waypoint Mission\n");
       drone->mission_start();
     }
-    else if (temp32 == 'c') {
+    else if (temp32 == 'c')
+    {
       printf("Starting Action Server Waypoint Mission\n");
       drone->waypoint_navigation_send_request(actionWaypointList);
     }
-    else if (temp32 == 'e') {
+    else if (temp32 == 'e')
+    {
       /*exit*/
       return 0;
     }
-    
   }
   return 0;
 }
