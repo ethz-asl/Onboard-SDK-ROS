@@ -1,0 +1,8 @@
+{
+    "python.linting.pylintEnabled": false,
+    "python.autoComplete.extraPaths": [
+        "/home/flourish/catkin_ws/devel/lib/python2.7/dist-packages",
+        "/opt/ros/indigo/lib/python2.7/dist-packages",
+        "/home/flourish/piksi_rtk_lib/libsbp/python"
+    ]
+}

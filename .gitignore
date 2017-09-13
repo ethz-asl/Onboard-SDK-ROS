@@ -3,5 +3,4 @@
 *.swo
 *.swp
 *.pyc
-.vscode/
 build.sh
