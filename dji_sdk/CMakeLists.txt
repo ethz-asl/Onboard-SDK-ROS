@@ -144,6 +144,7 @@ add_action_files(
   LocalPositionNavigation.action
   WaypointNavigation.action
   DroneTask.action
+  LocalWaypointNavigation.action
 )
 
 ## Generate added messages and services with any dependencies listed here

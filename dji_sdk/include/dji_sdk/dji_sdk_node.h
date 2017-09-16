@@ -310,6 +310,8 @@ private:
       GlobalPositionNavigationActionServer;
   typedef actionlib::SimpleActionServer<dji_sdk::WaypointNavigationAction>
       WaypointNavigationActionServer;
+  typedef actionlib::SimpleActionServer<dji_sdk::LocalWaypointNavigationAction>
+      LocalWaypointNavigationActionServer;
 
   DroneTaskActionServer *drone_task_action_server;
   LocalPositionNavigationActionServer *local_position_navigation_action_server;
@@ -318,6 +320,7 @@ private:
   GlobalPositionNavigationActionServer
       *global_position_navigation_action_server;
   WaypointNavigationActionServer *waypoint_navigation_action_server;
+  LocalWaypointNavigationActionServer *local_waypoint_navigation_action_server;
 
   dji_sdk::DroneTaskFeedback drone_task_feedback;
   dji_sdk::DroneTaskResult drone_task_result;

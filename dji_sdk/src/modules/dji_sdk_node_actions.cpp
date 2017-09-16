@@ -379,3 +379,85 @@ bool DJISDKNode::waypoint_navigation_action_callback(const dji_sdk::WaypointNavi
 
   return true;
 }
+
+bool DJISDKNode::process_local_waypoint(geometry_msgs::Pose dest)
+{
+  double dis_x, dis_y;
+  float dis_z;
+
+  DJI::onboardSDK::FlightData flight_ctrl_data;
+  flight_ctrl_data.flag = 0x81; // Vertical velocity, horizontal position offset, yaw rate control in ground frame stable mode
+  flight_ctrl_data.yaw = 0;   //FIXME: Use destination pose yaw
+
+  int x_progress = 0;
+  int y_progress = 0;
+  int z_progress = 0;
+  ros::Rate loop_rate(50);
+
+  while (latitude_progress < 100 || longitude_progress < 100 || altitude_progress < 100)
+  {
+    if (waypoint_navigation_action_server->isPreemptRequested())
+    {
+      return false;
+    }
+
+    double d_lon = dst_longitude - global_position.longitude;
+    double d_lat = dst_latitude - global_position.latitude;
+
+    flight_ctrl_data.x = ((d_lat)*C_PI / 180) * C_EARTH - velocity.vx;
+    flight_ctrl_data.y = ((d_lon)*C_PI / 180) * C_EARTH * cos((dst_latitude)*C_PI / 180) - velocity.vy;
+    flight_ctrl_data.z = dst_altitude - global_position.altitude - velocity.vz;
+
+    rosAdapter->flight->setFlight(&flight_ctrl_data);
+
+    det_x = (100 * (dst_latitude - global_position.latitude)) / dis_x;
+    det_y = (100 * (dst_longitude - global_position.longitude)) / dis_y;
+    det_z = (100 * (dst_altitude - global_position.altitude)) / dis_z;
+
+    latitude_progress = 100 - std::abs((int)det_x);
+    longitude_progress = 100 - std::abs((int)det_y);
+    altitude_progress = 100 - std::abs((int)det_z);
+
+    //lazy evaluation
+    //need to find a better way
+    if (std::abs(dst_latitude - global_position.latitude) < 0.00001)
+      latitude_progress = 100;
+    if (std::abs(dst_longitude - global_position.longitude) < 0.00001)
+      longitude_progress = 100;
+    if (std::abs(dst_altitude - global_position.altitude) < 0.12)
+      altitude_progress = 100;
+
+    waypoint_navigation_feedback.latitude_progress = latitude_progress;
+    waypoint_navigation_feedback.longitude_progress = longitude_progress;
+    waypoint_navigation_feedback.altitude_progress = altitude_progress;
+    waypoint_navigation_action_server->publishFeedback(waypoint_navigation_feedback);
+    loop_rate.sleep();
+  }
+  ros::Duration(new_waypoint.staytime).sleep();
+  return true;
+}
+
+bool DJISDKNode::local_waypoint_navigation_action_callback(const dji_sdk::WaypointNavigationGoalConstPtr &goal)
+{
+  dji_sdk::WaypointList new_waypoint_list;
+  new_waypoint_list = goal->waypoint_list;
+
+  bool isSucceeded;
+  for (int i = 0; i < new_waypoint_list.waypoint_list.size(); i++)
+  {
+    const dji_sdk::Waypoint new_waypoint = new_waypoint_list.waypoint_list[i];
+    waypoint_navigation_feedback.index_progress = i;
+    isSucceeded = process_gps_waypoint(new_waypoint);
+    if (!isSucceeded)
+    {
+      waypoint_navigation_result.result = false;
+      waypoint_navigation_action_server->setPreempted(waypoint_navigation_result);
+      return false;
+    }
+  }
+
+  waypoint_navigation_result.result = true;
+  waypoint_navigation_action_server->setSucceeded(waypoint_navigation_result);
+
+  return true;
+}
