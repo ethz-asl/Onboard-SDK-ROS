@@ -21,12 +21,16 @@ bool DJISDKNode::drone_task_action_callback(const dji_sdk::DroneTaskGoalConstPtr
   if (request_action == 1)
   {
     //takeoff
+    std::cout << "Request Control" << std::endl;
+    rosAdapter->coreAPI->setControl(1);
     rosAdapter->flight->task(DJI::onboardSDK::Flight::TASK::TASK_TAKEOFF);
   }
   else if (request_action == 2)
   {
     //landing
     rosAdapter->flight->task(DJI::onboardSDK::Flight::TASK::TASK_LANDING);
+    std::cout << "Release Control" << std::endl;
+    rosAdapter->coreAPI->setControl(0);
   }
   else if (request_action == 3)
   {
@@ -93,11 +97,12 @@ bool DJISDKNode::local_position_navigation_action_callback(const dji_sdk::LocalP
     z_progress = 100 - (int)det_z;
 
     //lazy evaluation
-    if (std::abs(dst_x - local_position.x) < 0.1)
+    // TODO: Fix add rosparam for indicating that it has reached the waypoint
+    if (std::abs(dst_x - local_position.x) < 0.5)
       x_progress = 100;
-    if (std::abs(dst_y - local_position.y) < 0.1)
+    if (std::abs(dst_y - local_position.y) < 0.5)
       y_progress = 100;
-    if (std::abs(dst_z - local_position.z) < 0.1)
+    if (std::abs(dst_z - local_position.z) < 0.5)
       z_progress = 100;
 
     local_position_navigation_feedback.x_progress = x_progress;
