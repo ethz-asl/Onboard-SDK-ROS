@@ -25,13 +25,7 @@
 //----------------------------------------------------------
 using namespace std;
     
-// TODO: Fix temporary hack for getting hardware timestamps using nanoTime
-// should not be defined globally
-auto g_counter = 0;
-const auto g_WRAP_TIME = 4.295;     //seconds
-uint32_t g_prevNanoTime = 0;
-long double g_hardwareStamp;
-    
+  
 void DJISDKNode::transparent_transmission_callback(uint8_t *buf, uint8_t len)
 {
 	dji_sdk::TransparentTransmissionData transparent_transmission_data;
@@ -43,39 +37,93 @@ void DJISDKNode::transparent_transmission_callback(uint8_t *buf, uint8_t len)
 void DJISDKNode::broadcast_callback()
 {
     DJI::onboardSDK::BroadcastData bc_data = rosAdapter->coreAPI->getBroadcastData();
-
     DJI::onboardSDK::Version version = rosAdapter->coreAPI->getSDKVersion();
     unsigned short msg_flags = bc_data.dataFlag;
 
     static int frame_id = 0;
     frame_id ++;
-   
+
     auto current_time = ros::Time::now();
 
+    if (msg_flags & HAS_TIME) {
 
+      // Only this message containes the received time in the header and the
+      // hardware time within the message
+      // All following messages should have translated hardware times in the
+      // header.
 
-    if(msg_flags & HAS_TIME){
+      time_stamp.header.frame_id = "/time";
+      time_stamp.header.stamp = current_time;
+      time_stamp.time = bc_data.timeStamp.time; // This is now in units of 1/400
+                                                // s but resolution is only of
+                                                // the order of 1s!!!
+      time_stamp.time_ns =
+          bc_data.timeStamp.nanoTime; // This is perhaps more accurate??? But
+                                      // requires handling the wrapping after
+                                      // every 4.295 secs. DO NOT SUM both as it
+                                      // leads to double counting.
 
-        // Only this message containes the received time in the header and the hardware time within the message
-        // All following messages should have translated hardware times in the header.
-        time_stamp.header.frame_id = "/time";
-        time_stamp.header.stamp = current_time;
+      time_stamp.sync_flag = bc_data.timeStamp.syncFlag;
+      time_stamp_publisher.publish(time_stamp);
 
-        if(device_time_translator_){
-        current_time = device_time_translator_->update(bc_data.timeStamp.time, current_time, 0.0); // estimated offset is 0.0 for now observed to usuall be < 2 ms can be upto ~ 20 ms!!!
-        //cout << setprecision(15) <<setw(30) << "Translated HW Time Offset: " << current_time.toSec() - ros::Time::now().toSec() << endl;
-        }
-        time_stamp.time = bc_data.timeStamp.time;  // This is now in units of 1/400 s
-        time_stamp.time_ns = bc_data.timeStamp.nanoTime; // This is perhaps more accurate??? But requires handling the wrapping after every 4.295 secs. DO NOT SUM both as it leads to double counting.
-        if(bc_data.timeStamp.nanoTime < ::g_prevNanoTime){
-            ::g_counter++;
-        }
-        g_hardwareStamp = ::g_counter*::g_WRAP_TIME + double(bc_data.timeStamp.nanoTime)*(1e-9);
-        ::g_prevNanoTime = bc_data.timeStamp.nanoTime;
-        //cout << setprecision(15) <<setw(30) << "HW Time: " << g_hardwareStamp << endl; //TODO: Publish instead of printing, seems to drift by about 1ms every ~ 50s
-        time_stamp.sync_flag = bc_data.timeStamp.syncFlag;
-        time_stamp_publisher.publish(time_stamp);
+      
+      // Use translated hardware time
+      if (device_time_translator_) {
+        current_time = device_time_translator_->update(bc_data.timeStamp.nanoTime, current_time,0.0);
+      }
+      /*
+      if (device_time_translator_->isReadyToTranslate()) {
+       current_time =
+            device_time_translator_->translate(bc_data.timeStamp.nanoTime);
+      }*/ else {
+        ROS_WARN(
+            "device_time_translator is not ready yet, using ros::Time::now()");
+      }
+      
     }
+
+    // update Imu message
+    if ((msg_flags & HAS_Q) && (msg_flags & HAS_W) && (msg_flags & HAS_A)) {
+
+      ROS_DEBUG_STREAM("Frame " << frame_id << " " << "Hardware timeStamp.nanoTime "<< std::setprecision(15) << double(bc_data.timeStamp.nanoTime)*1e-9);
+      imu_msg.header.frame_id = "/world";
+      
+      imu_msg.header.stamp = current_time;
+      //TODO: Raghav - Update with nearest neighbour messages to increase frequency
+      // Conversion from NED to NWU (XYZ--robot body frame)
+      /*
+      tf::Quaternion qNED2ENU();
+      qNED2ENU.setEulerZYX(pi/2,0, -pi/2);
+      tf::Quaternion qIMU(bc_data.q.q1, bc_data.q.q2, bc_data.q.q3,
+      bc_data.q.q0);
+      tf::Quaternion qIMUENU;
+      qIMUENU = qNED2ENU*qIMU;
+      imu_msg.orientation = quaternionTFToMsg(qIMUENU);
+      */
+      // Convert from NED to ENU frame // This is conversion to NWU frame not
+      // ENU
+      imu_msg.orientation.w = bc_data.q.q0;
+      imu_msg.orientation.x = bc_data.q.q1;
+      imu_msg.orientation.y = -bc_data.q.q2;
+      imu_msg.orientation.z = -bc_data.q.q3;
+      imu_msg.angular_velocity.x = bc_data.w.x;
+      imu_msg.angular_velocity.y = -bc_data.w.y;
+      imu_msg.angular_velocity.z = -bc_data.w.z;
+
+      imu_msg.linear_acceleration.x = bc_data.a.x * 9.807;
+      imu_msg.linear_acceleration.y = -bc_data.a.y * 9.807;
+      imu_msg.linear_acceleration.z = -bc_data.a.z * 9.807;
+
+      imu_msg.orientation_covariance = {-1.0, 0.0, 0.0, 0.0, 0.0,
+                                        0.0,  0.0, 0.0, 0.0};
+      imu_msg.angular_velocity_covariance = {0,   0.0, 0.0, 0.0, 0,
+                                             0.0, 0.0, 0.0, 0};
+      imu_msg.linear_acceleration_covariance = {0,   0.0, 0.0, 0.0, 0,
+                                                0.0, 0.0, 0.0, 0};
+      imu_msg_publisher.publish(imu_msg);
+		}
+    
+
 
     //update attitude msg
     if ( (msg_flags & HAS_Q) && (msg_flags & HAS_W) ) {
@@ -92,45 +140,7 @@ void DJISDKNode::broadcast_callback()
         attitude_quaternion_publisher.publish(attitude_quaternion);
     }
 
-	//update Imu message
-		if ( (msg_flags & HAS_Q) && (msg_flags & HAS_W) && (msg_flags & HAS_A) ) {
-				imu_msg.header.frame_id = "/world";
-                // Use translated hardware time
-				imu_msg.header.stamp = current_time;
-                
-                // Conversion from NED to NWU (XYZ--robot body frame)
-                /*
-                tf::Quaternion qNED2ENU();
-                qNED2ENU.setEulerZYX(pi/2,0, -pi/2);
-                tf::Quaternion qIMU(bc_data.q.q1, bc_data.q.q2, bc_data.q.q3, bc_data.q.q0);
-                tf::Quaternion qIMUENU;
-                qIMUENU = qNED2ENU*qIMU;
-                imu_msg.orientation = quaternionTFToMsg(qIMUENU);
-                */
-                // Convert from NED to ENU frame // This is conversion to NWU frame not ENU
-				imu_msg.orientation.w = bc_data.q.q0;
-				imu_msg.orientation.x = bc_data.q.q1;
-				imu_msg.orientation.y = -bc_data.q.q2;
-				imu_msg.orientation.z = -bc_data.q.q3;
-				imu_msg.angular_velocity.x = bc_data.w.x;
-				imu_msg.angular_velocity.y = -bc_data.w.y;
-				imu_msg.angular_velocity.z = -bc_data.w.z;
-				
-				imu_msg.linear_acceleration.x = bc_data.a.x*9.807;
-				imu_msg.linear_acceleration.y = -bc_data.a.y*9.807;
-				imu_msg.linear_acceleration.z = -bc_data.a.z*9.807;
-
-				imu_msg.orientation_covariance={-1.0,0.0,0.0,\
-											    0.0,0.0,0.0,\
-											    0.0,0.0,0.0};
-				imu_msg.angular_velocity_covariance={0,0.0,0.0,\
-											   		 0.0,0,0.0,\
-											    	 0.0,0.0,0};
-				imu_msg.linear_acceleration_covariance={0,0.0,0.0,\
-											   			0.0,0,0.0,\
-											    	 	0.0,0.0,0};
-				imu_msg_publisher.publish(imu_msg);
-		}
+	
 
     //update global_position, gps and geopose msg
     if (msg_flags & HAS_POS) {
@@ -575,11 +585,8 @@ DJISDKNode::DJISDKNode(ros::NodeHandle& nh, ros::NodeHandle& nh_private) : dji_s
 	init_subscribers(nh);
     // Init time stamp translator
     device_time_translator_.reset(new cuckoo_time_translator::DefaultDeviceTimeUnwrapperAndTranslator(
-          cuckoo_time_translator::WrappingClockParameters(
-            UINT32_MAX, // offset at every overflow of containing uint32_t
-            400 // at 400Hz
-          ),
-          nh.getNamespace()
+          cuckoo_time_translator::WrappingClockParameters(UINT32_MAX, 1e9),
+          nh.getNamespace(), cuckoo_time_translator::Defaults().setFilterAlgorithm(cuckoo_time_translator::FilterAlgorithm::ConvexHull)
         )
     );
 
