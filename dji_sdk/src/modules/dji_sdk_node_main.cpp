@@ -224,8 +224,8 @@ void DJISDKNode::broadcast_callback()
     if ((msg_flags & HAS_POS) && (msg_flags & HAS_Q) && (msg_flags & HAS_W) && (msg_flags & HAS_V))
     {
         //odometry.header.frame_id = "/world";
-        odometry.header.frame_id = "/odom";
-        odometry.child_frame_id = "/base_link";
+        odometry.header.frame_id = "/dji/odom";
+        odometry.child_frame_id = "/dji/base_link";
 
         odometry.header.stamp = current_time;
         // Convert from NED to NWU
@@ -273,7 +273,7 @@ void DJISDKNode::broadcast_callback()
         odometry.twist.twist.linear.z = v_body.z();
 
         trans.setRotation(q);
-        broad.sendTransform(tf::StampedTransform(trans, ros::Time::now(), "odom", "base_link"));
+        broad.sendTransform(tf::StampedTransform(trans, ros::Time::now(), "/dji/odom", "/dji/base_link"));
         odometry_publisher.publish(odometry);
 
         // Update geopose msg
