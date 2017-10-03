@@ -98,11 +98,11 @@ bool DJISDKNode::local_position_navigation_action_callback(const dji_sdk::LocalP
 
     //lazy evaluation
     // TODO: Fix add rosparam for indicating that it has reached the waypoint
-    if (std::abs(dst_x - local_position.x) < 0.5)
+    if (std::abs(dst_x - local_position.x) < 0.15)
       x_progress = 100;
-    if (std::abs(dst_y - local_position.y) < 0.5)
+    if (std::abs(dst_y - local_position.y) < 0.15)
       y_progress = 100;
-    if (std::abs(dst_z - local_position.z) < 0.5)
+    if (std::abs(dst_z - local_position.z) < 0.15)
       z_progress = 100;
 
     local_position_navigation_feedback.x_progress = x_progress;

@@ -28,6 +28,7 @@
 #include <sensor_msgs/Joy.h>
 #include <sensor_msgs/NavSatFix.h>
 #include <std_msgs/UInt8.h>
+#include <geodetic_utils/geodetic_conv.hpp>
 
 #define C_EARTH (double)6378137.0
 #define C_PI (double)3.141592653589793
@@ -47,6 +48,7 @@ private:
   dji_sdk::Gimbal gimbal;
   dji_sdk::GlobalPosition global_position;
   dji_sdk::GlobalPosition global_position_ref;
+  geodetic_converter::GeodeticConverter geodetic_converter;
   geometry_msgs::Point external_position;
   dji_sdk::LocalPosition local_position;
   dji_sdk::LocalPosition local_position_ref;
@@ -70,7 +72,6 @@ private:
   bool localposbase_use_height = true;
 
   int global_position_ref_seted = 0;
-
   // internal variables
   DJISDKMission *dji_sdk_mission;
   char app_key[65];

@@ -28,6 +28,7 @@ find_package(catkin REQUIRED COMPONENTS
   joy
   cuckoo_time_translator
   geographic_msgs
+  geodetic_utils
 )
 
 ## System dependencies are found with CMake's conventions

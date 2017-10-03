@@ -165,6 +165,7 @@ void DJISDKNode::broadcast_callback()
         {
             global_position_ref = global_position;
             global_position_ref_seted = 1;
+            geodetic_converter.initialiseReference(global_position.latitude,global_position.longitude,global_position.altitude);
         }
 
         //update local_position msg

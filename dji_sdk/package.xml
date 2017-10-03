@@ -56,6 +56,7 @@
   <build_depend>joy</build_depend>
   <build_depend>cuckoo_time_translator</build_depend>
   <build_depend>geographic_msgs</build_depend>
+  <build_depend>geodetic_utils</build_depend>
 
   <run_depend>message_runtime</run_depend>
   <run_depend>actionlib</run_depend>
@@ -71,7 +72,7 @@
   <run_depend>mav_msgs</run_depend>
   <run_depend>joy</run_depend>
   <run_depend>cuckoo_time_translator</run_depend>
-  <build_depend>geographic_msgs</build_depend>
+  <run_depend>geodetic_utils</run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
