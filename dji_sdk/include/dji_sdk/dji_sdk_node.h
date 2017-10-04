@@ -11,7 +11,7 @@
 
 #ifndef __DJI_SDK_NODE_H__
 #define __DJI_SDK_NODE_H__
-
+#include <algorithm>
 #include "keyboard/Key.h"
 #include <actionlib/server/simple_action_server.h>
 #include <boost/bind.hpp>
@@ -29,6 +29,7 @@
 #include <sensor_msgs/NavSatFix.h>
 #include <std_msgs/UInt8.h>
 #include <geodetic_utils/geodetic_conv.hpp>
+#include <tf/LinearMath/Transform.h>
 
 #define C_EARTH (double)6378137.0
 #define C_PI (double)3.141592653589793
@@ -397,7 +398,7 @@ private:
 
   void gps_convert_ned(float &ned_x, float &ned_y, double gps_t_lon,
                        double gps_t_lat, double gps_r_lon, double gps_r_lat);
-
+  float clip(const float& n, const float& lower, const float& upper);
   dji_sdk::LocalPosition gps_convert_ned(dji_sdk::GlobalPosition loc);
 };
 

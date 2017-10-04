@@ -13,7 +13,6 @@
 #include <functional>
 #include <dji_sdk/DJI_LIB_ROS_Adapter.h>
 #include <tf/transform_broadcaster.h>
-#include <tf/LinearMath/Transform.h>
 #include <iomanip>
 #include <cuckoo_time_translator/DeviceTimeTranslator.h>
 #include <stdint.h>
@@ -169,7 +168,7 @@ void DJISDKNode::broadcast_callback()
         }
 
         //update local_position msg
-        local_position.header.frame_id = "/world";
+        local_position.header.frame_id = 'dji/odom';
         local_position.header.stamp = current_time;
         gps_convert_ned(
             local_position.x,
@@ -269,10 +268,11 @@ void DJISDKNode::broadcast_callback()
                             odometry.twist.twist.linear.z);
 
         tf::Vector3 v_body = v_world.rotate(q.getAxis(), -q.getAngle());
+        /* Not needed, since velocity should be in world (odom) frame
         odometry.twist.twist.linear.x = v_body.x();
         odometry.twist.twist.linear.y = v_body.y();
         odometry.twist.twist.linear.z = v_body.z();
-
+        */
         trans.setRotation(q);
         broad.sendTransform(tf::StampedTransform(trans, ros::Time::now(), "/dji/odom", "/dji/base_link"));
         odometry_publisher.publish(odometry);
@@ -626,6 +626,10 @@ void DJISDKNode::gps_convert_ned(float &ned_x, float &ned_y,
     ned_x = DEG2RAD(d_lat) * C_EARTH;
     ned_y = DEG2RAD(d_lon) * C_EARTH * cos(DEG2RAD(gps_t_lat));
 };
+
+float DJISDKNode::clip(const float& n, const float& lower, const float& upper) {
+  return std::max(lower, std::min(n, upper));
+}
 
 dji_sdk::LocalPosition DJISDKNode::gps_convert_ned(dji_sdk::GlobalPosition loc)
 {

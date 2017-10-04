@@ -60,9 +60,9 @@ bool DJISDKNode::local_position_navigation_action_callback(const dji_sdk::LocalP
   float dst_y = goal->y;
   float dst_z = goal->z;
 
-  float org_x = local_position.x;
-  float org_y = local_position.y;
-  float org_z = local_position.z;
+  float org_x = odometry.pose.pose.position.x;
+  float org_y = odometry.pose.pose.position.y;
+  float org_z = odometry.pose.pose.position.z;
 
   float dis_x = dst_x - org_x;
   float dis_y = dst_y - org_y;
@@ -71,7 +71,7 @@ bool DJISDKNode::local_position_navigation_action_callback(const dji_sdk::LocalP
   float det_x, det_y, det_z;
 
   DJI::onboardSDK::FlightData flight_ctrl_data;
-  flight_ctrl_data.flag = 0x81;
+  flight_ctrl_data.flag = 0b01000011; // Velocities in all X, Y and Z directions
 
   flight_ctrl_data.yaw = 0;
 
@@ -82,15 +82,31 @@ bool DJISDKNode::local_position_navigation_action_callback(const dji_sdk::LocalP
 
   while (x_progress < 100 || y_progress < 100 || z_progress < 100)
   {
+    float lo = -4.0;
+    float hi = 4.0;
 
-    flight_ctrl_data.x = dst_x - local_position.x - velocity.vx;
-    flight_ctrl_data.y = dst_y - local_position.y - velocity.vy;
-    flight_ctrl_data.z = dst_z - local_position.z - velocity.vz;
+
+    float commandX = dst_x - odometry.pose.pose.position.x - odometry.twist.twist.linear.x;
+    float commandY = dst_y - odometry.pose.pose.position.y - odometry.twist.twist.linear.y;
+    float commandZ = dst_z - odometry.pose.pose.position.z - odometry.twist.twist.linear.z;
+    //commandX = clip(commandX, lo, hi);
+    //commandY = clip(commandY, lo, hi);
+    //float commandZ = dst_z;
+    
+    tf::Vector3 c_world(commandX, commandY, commandZ);
+    tf::Quaternion q(odometry.pose.pose.orientation.x,
+      odometry.pose.pose.orientation.y,
+      odometry.pose.pose.orientation.z,
+      odometry.pose.pose.orientation.w);
+      tf::Vector3 c_body = c_world.rotate(q.getAxis(), -q.getAngle());
+      flight_ctrl_data.x = c_body.x();
+      flight_ctrl_data.y = -c_body.y();
+      flight_ctrl_data.z = commandZ; // should be in world (odom) frame
     rosAdapter->flight->setFlight(&flight_ctrl_data);
 
-    det_x = (100 * (dst_x - local_position.x)) / dis_x;
-    det_y = (100 * (dst_y - local_position.y)) / dis_y;
-    det_z = (100 * (dst_z - local_position.z)) / dis_z;
+    det_x = (100 * (dst_x - odometry.pose.pose.position.x)) / dis_x;
+    det_y = (100 * (dst_y - odometry.pose.pose.position.y)) / dis_y;
+    det_z = (100 * (dst_z - odometry.pose.pose.position.z)) / dis_z;
 
     x_progress = 100 - (int)det_x;
     y_progress = 100 - (int)det_y;
@@ -98,11 +114,11 @@ bool DJISDKNode::local_position_navigation_action_callback(const dji_sdk::LocalP
 
     //lazy evaluation
     // TODO: Fix add rosparam for indicating that it has reached the waypoint
-    if (std::abs(dst_x - local_position.x) < 0.15)
+    if (std::abs(dst_x - odometry.pose.pose.position.x) < 0.5)
       x_progress = 100;
-    if (std::abs(dst_y - local_position.y) < 0.15)
+    if (std::abs(dst_y - odometry.pose.pose.position.y) < 0.5)
       y_progress = 100;
-    if (std::abs(dst_z - local_position.z) < 0.15)
+    if (std::abs(dst_z - odometry.pose.pose.position.z) < 0.5)
       z_progress = 100;
 
     local_position_navigation_feedback.x_progress = x_progress;
