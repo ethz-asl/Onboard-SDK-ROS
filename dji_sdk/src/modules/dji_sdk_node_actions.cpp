@@ -400,3 +400,77 @@ bool DJISDKNode::waypoint_navigation_action_callback(const dji_sdk::WaypointNavi
 
   return true;
 }
+
+bool DJISDKNode::local_waypoint_mission_action_callback(const dji_sdk::LocalWaypointMissionGoalConstPtr &goal)
+{
+  dji_sdk::MissionWaypointTask waypoint_task;
+  dji_sdk::MissionWaypoint 	 waypoint;
+/*  
+  dji_sdk::WaypointList new_waypoint_list;
+  new_waypoint_list = goal->waypoint_list;
+*/
+  bool isSucceeded;
+  // Clear the vector of previous waypoints 
+  waypoint_task.mission_waypoint.clear();
+  //mission waypoint upload
+  waypoint_task.velocity_range = 10;
+  waypoint_task.idle_velocity = 3;
+  waypoint_task.action_on_finish = 0;
+  waypoint_task.mission_exec_times = 1;
+  waypoint_task.yaw_mode = 4;
+  waypoint_task.trace_mode = 0;
+  waypoint_task.action_on_rc_lost = 0;
+  waypoint_task.gimbal_pitch_mode = 0;
+  waypoint.damping_distance = 0;
+  waypoint.target_yaw = 0;
+  waypoint.target_gimbal_pitch = 0;
+  waypoint.turn_mode = 0;
+  waypoint.has_action = 0;
+  
+  double * orig_lat, orig_long, orig_alt;
+  geodetic_converter.getReference(orig_lat, orig_long, orig_alt)
+  ROS_INFO("Lat: %f", *orig_lat);
+  ROS_INFO("Lon: %f", *orig_long);
+  ROS_INFO("Alt: %f", *orig_alt);
+
+  for (int i = 0; i < goal->waypoint_list.points.size(); i++)
+  {
+    geometry_msgs::Vector3 point = goal->waypoint_list.points[i].transforms.translation;
+    geodetic_converter.enu2geodetic(point.x, point.y, point.z, &waypoint.latitude, &waypoint.longitude,&waypoint.altitude);
+    waypoint_task.mission_waypoint.push_back(waypoint);
+
+    /*
+    const dji_sdk::Waypoint new_waypoint = new_waypoint_list.waypoint_list[i];
+    waypoint_navigation_feedback.index_progress = i;
+    isSucceeded = process_gps_waypoint(new_waypoint);
+    if (!isSucceeded)
+    {
+      waypoint_navigation_result.result = false;
+      waypoint_navigation_action_server->setPreempted(waypoint_navigation_result);
+      return false;
+    }
+    */
+  }
+  dji_sdk::MissionWpUpload mission_waypoint_task;
+  mission_waypoint_task.request.waypoint_task = waypoint_task;
+  bool uploadSuccess = dji_sdk_mission->mission_wp_upload_service.call(mission_waypoint_task);
+  if (!(uploadSucess && mission_waypoint_task.response.result));
+  {
+    local_waypoint_mission_result.result = false;
+    local_waypoint_mission_action_server->setPreempted(local_waypoint_mission_result);
+    return false;
+  }
+  dji_sdk::MissionStart mission_start;
+  bool missionStartSuccess = mission_start_service.call(mission_start);
+  if (!(missionStartSuccess && mission_start.response.result))
+  {
+    local_waypoint_mission_result.result = false;
+    local_waypoint_mission_action_server->setPreempted(local_waypoint_mission_result);
+    return false;
+  }
+
+  waypoint_navigation_result.result = true;
+  waypoint_navigation_action_server->setSucceeded(waypoint_navigation_result);
+
+  return true;
+}

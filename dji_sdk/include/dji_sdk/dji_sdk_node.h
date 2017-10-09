@@ -32,7 +32,6 @@
 #include <tf/LinearMath/Transform.h>
 
 #define C_EARTH (double)6378137.0
-#define C_PI (double)3.141592653589793
 #define DEG2RAD(DEG) ((DEG) * ((C_PI) / (180.0)))
 
 extern DJI::onboardSDK::ROSAdapter *rosAdapter;
@@ -312,6 +311,8 @@ private:
       GlobalPositionNavigationActionServer;
   typedef actionlib::SimpleActionServer<dji_sdk::WaypointNavigationAction>
       WaypointNavigationActionServer;
+  typedef actionlib::SimpleActionServer<dji_sdk::LocalWaypointMissionAction>
+      LocalWaypointMissionActionServer;
 
   DroneTaskActionServer *drone_task_action_server;
   LocalPositionNavigationActionServer *local_position_navigation_action_server;
@@ -320,6 +321,7 @@ private:
   GlobalPositionNavigationActionServer
       *global_position_navigation_action_server;
   WaypointNavigationActionServer *waypoint_navigation_action_server;
+  LocalWaypointMissionActionServer *local_waypoint_mission_action_server;
 
   dji_sdk::DroneTaskFeedback drone_task_feedback;
   dji_sdk::DroneTaskResult drone_task_result;
@@ -332,6 +334,8 @@ private:
   dji_sdk::GlobalPositionNavigationResult global_position_navigation_result;
   dji_sdk::WaypointNavigationFeedback waypoint_navigation_feedback;
   dji_sdk::WaypointNavigationResult waypoint_navigation_result;
+  dji_sdk::LocalWaypointMissionFeedback local_waypoint_mission_feedback;
+  dji_sdk::LocalWaypointMissionResult local_waypoint_mission_result;
 
   bool drone_task_action_callback(const dji_sdk::DroneTaskGoalConstPtr &goal);
   bool local_position_navigation_action_callback(
@@ -342,6 +346,8 @@ private:
       const dji_sdk::GlobalPositionNavigationGoalConstPtr &goal);
   bool waypoint_navigation_action_callback(
       const dji_sdk::WaypointNavigationGoalConstPtr &goal);
+  bool local_waypoint_mission_action_callback(
+        const dji_sdk::LocalWaypointMissionGoalConstPtr &goal);
 
   void init_actions(ros::NodeHandle &nh) {
     drone_task_action_server = new DroneTaskActionServer(
@@ -379,6 +385,13 @@ private:
         boost::bind(&DJISDKNode::waypoint_navigation_action_callback, this, _1),
         false);
     waypoint_navigation_action_server->start();
+
+  local_waypoint_mission_action_server = new LocalWaypointMissionActionServer(
+    nh, "dji_sdk/local_waypoint_mission_action",
+    boost::bind(&DJISDKNode::local_waypoint_mission_action_callback, this, _1),
+    false);
+    local_waypoint_mission_action_server->start();
+
   }
 
 public:

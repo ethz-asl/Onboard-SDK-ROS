@@ -61,6 +61,7 @@
 #include <dji_sdk/GlobalPositionNavigationAction.h>
 #include <dji_sdk/LocalPositionNavigationAction.h>
 #include <dji_sdk/WaypointNavigationAction.h>
+#include <dji_sdk/LocalWaypointMissionAction.h>
 
 //missions
 #include <dji_sdk/MissionFollowmeTask.h>

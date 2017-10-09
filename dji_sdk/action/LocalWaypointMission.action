@@ -1,10 +1,8 @@
-# Goal
-WaypointList waypoint_list
+
+trajectory_msgs/MultiDOFJointTrajectory  waypoint_list
 ---
-# Result
 bool result
 ---
-# Feedback
 #progress is in percent
 uint8 latitude_progress
 uint8 longitude_progress

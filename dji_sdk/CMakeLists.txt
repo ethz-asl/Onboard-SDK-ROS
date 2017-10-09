@@ -144,6 +144,7 @@ add_action_files(
   GlobalPositionNavigation.action
   LocalPositionNavigation.action
   WaypointNavigation.action
+  LocalWaypointMission.action
   DroneTask.action
 )
 
@@ -154,6 +155,7 @@ generate_messages(
   nav_msgs
   std_msgs
   actionlib_msgs
+  trajectory_msgs
 )
 
 ###################################
