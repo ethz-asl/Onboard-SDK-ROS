@@ -405,10 +405,10 @@ bool DJISDKNode::local_waypoint_mission_action_callback(const dji_sdk::LocalWayp
 {
   dji_sdk::MissionWaypointTask waypoint_task;
   dji_sdk::MissionWaypoint 	 waypoint;
-/*  
-  dji_sdk::WaypointList new_waypoint_list;
-  new_waypoint_list = goal->waypoint_list;
-*/
+    /*  
+      dji_sdk::WaypointList new_waypoint_list;
+      new_waypoint_list = goal->waypoint_list;
+    */
   bool isSucceeded;
   // Clear the vector of previous waypoints 
   waypoint_task.mission_waypoint.clear();
@@ -427,16 +427,16 @@ bool DJISDKNode::local_waypoint_mission_action_callback(const dji_sdk::LocalWayp
   waypoint.turn_mode = 0;
   waypoint.has_action = 0;
   
-  double * orig_lat, orig_long, orig_alt;
-  geodetic_converter.getReference(orig_lat, orig_long, orig_alt)
+  double * orig_lat, * orig_long, * orig_alt;
+  geodetic_converter.getReference(orig_lat, orig_long, orig_alt);
   ROS_INFO("Lat: %f", *orig_lat);
   ROS_INFO("Lon: %f", *orig_long);
   ROS_INFO("Alt: %f", *orig_alt);
 
   for (int i = 0; i < goal->waypoint_list.points.size(); i++)
   {
-    geometry_msgs::Vector3 point = goal->waypoint_list.points[i].transforms.translation;
-    geodetic_converter.enu2geodetic(point.x, point.y, point.z, &waypoint.latitude, &waypoint.longitude,&waypoint.altitude);
+    geometry_msgs::Vector3 point = goal->waypoint_list.points[i].transforms[0].translation;
+    geodetic_converter.enu2Geodetic(point.x, point.y, point.z, &waypoint.latitude, &waypoint.longitude,&waypoint.altitude);
     waypoint_task.mission_waypoint.push_back(waypoint);
 
     /*
