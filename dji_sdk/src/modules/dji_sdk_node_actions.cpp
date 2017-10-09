@@ -436,7 +436,12 @@ bool DJISDKNode::local_waypoint_mission_action_callback(const dji_sdk::LocalWayp
   for (int i = 0; i < goal->waypoint_list.points.size(); i++)
   {
     geometry_msgs::Vector3 point = goal->waypoint_list.points[i].transforms[0].translation;
-    geodetic_converter.enu2Geodetic(point.x, point.y, point.z, &waypoint.latitude, &waypoint.longitude,&waypoint.altitude);
+    double east = point.x;
+    double north = point.y;
+    double up = point.z;
+    double *lat, *lon, *alt;
+    geodetic_converter.enu2Geodetic(east, north, up, lat, lon,alt);
+    waypoint.latitude = *lat; waypoint.longitude= *lon; waypoint.altitude = *alt;
     waypoint_task.mission_waypoint.push_back(waypoint);
 
     /*
@@ -451,15 +456,18 @@ bool DJISDKNode::local_waypoint_mission_action_callback(const dji_sdk::LocalWayp
     }
     */
   }
+  ros::NodeHandle nh;
   dji_sdk::MissionWpUpload mission_waypoint_task;
+  ros::ServiceClient mission_wp_upload_service = nh.serviceClient<dji_sdk::MissionWpUpload>("dji_sdk/mission_waypoint_upload");  
   mission_waypoint_task.request.waypoint_task = waypoint_task;
-  bool uploadSuccess = dji_sdk_mission->mission_wp_upload_service.call(mission_waypoint_task);
-  if (!(uploadSucess && mission_waypoint_task.response.result));
+  bool uploadSuccess = mission_wp_upload_service.call(mission_waypoint_task);
+  if (!(uploadSuccess && mission_waypoint_task.response.result));
   {
     local_waypoint_mission_result.result = false;
     local_waypoint_mission_action_server->setPreempted(local_waypoint_mission_result);
     return false;
   }
+  ros::ServiceClient mission_start_service = nh.serviceClient<dji_sdk::MissionStart>("dji_sdk/mission_start");  
   dji_sdk::MissionStart mission_start;
   bool missionStartSuccess = mission_start_service.call(mission_start);
   if (!(missionStartSuccess && mission_start.response.result))
