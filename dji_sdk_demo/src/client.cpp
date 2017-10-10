@@ -590,8 +590,8 @@ int main(int argc, char *argv[])
 				waypoint_task.action_on_rc_lost = 0;
 				waypoint_task.gimbal_pitch_mode = 0;
 
-                static int num_waypoints = 5; 
-                static int altitude = 80;
+                static int num_waypoints = 30; 
+                static int altitude = 5;
                 // Currently hard coded, should be dynamic
                 static float orig_lat = drone->global_position.latitude;
                 static float orig_long = drone->global_position.longitude;
@@ -600,29 +600,29 @@ int main(int argc, char *argv[])
                 for(int i = 0; i < num_waypoints; i++)
                 { // Create a square to debug overshooting
     				
-                    switch(i){
+                    switch(i%5){
                         case 0:
-                            waypoint.latitude = orig_lat+=0.0001;
-                            waypoint.longitude = orig_long+=0.0001;
+                            waypoint.latitude = orig_lat+=0.00001;
+                            waypoint.longitude = orig_long+=0.00001;
                             break;
                         case 1:
-                            waypoint.latitude = orig_lat+0.001;
+                            waypoint.latitude = orig_lat+0.0001;
                             waypoint.longitude = orig_long;
                             break;
                         case 2:
-                            waypoint.latitude = orig_lat+0.001;
-                            waypoint.longitude = orig_long+0.001;
+                            waypoint.latitude = orig_lat+0.0001;
+                            waypoint.longitude = orig_long+0.0001;
                             break;
                         case 3:
                             waypoint.latitude = orig_lat;
-                            waypoint.longitude = orig_long+0.001;
+                            waypoint.longitude = orig_long+0.0001;
                             break;
                         case 4:
                             waypoint.latitude = orig_lat;
                             waypoint.longitude = orig_long;
                             break;
                     }
-    				waypoint.altitude = altitude-60;
+    				waypoint.altitude = altitude;
     				waypoint.damping_distance = 0;
     				waypoint.target_yaw = 0;
     				waypoint.target_gimbal_pitch = 0;

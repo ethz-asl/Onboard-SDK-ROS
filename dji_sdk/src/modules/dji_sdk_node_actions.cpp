@@ -417,7 +417,7 @@ bool DJISDKNode::local_waypoint_mission_action_callback(const dji_sdk::LocalWayp
   waypoint_task.idle_velocity = 3;
   waypoint_task.action_on_finish = 0;
   waypoint_task.mission_exec_times = 1;
-  waypoint_task.yaw_mode = 4;
+  waypoint_task.yaw_mode = 4; // 0 -> head towards next wp, 4 -> do not change heading
   waypoint_task.trace_mode = 0;
   waypoint_task.action_on_rc_lost = 0;
   waypoint_task.gimbal_pitch_mode = 0;
@@ -427,36 +427,29 @@ bool DJISDKNode::local_waypoint_mission_action_callback(const dji_sdk::LocalWayp
   waypoint.turn_mode = 0;
   waypoint.has_action = 0;
   
-  double * orig_lat, * orig_long, * orig_alt;
-  geodetic_converter.getReference(orig_lat, orig_long, orig_alt);
-  ROS_INFO("Lat: %f", *orig_lat);
-  ROS_INFO("Lon: %f", *orig_long);
-  ROS_INFO("Alt: %f", *orig_alt);
+  double orig_lat, orig_long, orig_alt;
+  geodetic_converter.getReference(&orig_lat, &orig_long, &orig_alt);
+  ROS_INFO("Lat: %f", orig_lat);
+  ROS_INFO("Lon: %f", orig_long);
+  ROS_INFO("Alt: %f", orig_alt);
 
-  for (int i = 0; i < goal->waypoint_list.points.size(); i++)
+  for (int i = 0; i < goal->waypoint_list.points.size(); i++) // 
   {
     geometry_msgs::Vector3 point = goal->waypoint_list.points[i].transforms[0].translation;
     double east = point.x;
     double north = point.y;
     double up = point.z;
-    double *lat, *lon, *alt;
-    geodetic_converter.enu2Geodetic(east, north, up, lat, lon,alt);
-    waypoint.latitude = *lat; waypoint.longitude= *lon; waypoint.altitude = *alt;
+    double lat, lon, alt;
+    geodetic_converter.enu2Geodetic(east, north, up, &lat, &lon,&alt);
+    waypoint.latitude = (float)lat; waypoint.longitude= (float)lon; waypoint.altitude = (float)alt; // Need to be floats, otherwise out of memory errors may occur
     waypoint_task.mission_waypoint.push_back(waypoint);
-
-    /*
-    const dji_sdk::Waypoint new_waypoint = new_waypoint_list.waypoint_list[i];
-    waypoint_navigation_feedback.index_progress = i;
-    isSucceeded = process_gps_waypoint(new_waypoint);
-    if (!isSucceeded)
-    {
-      waypoint_navigation_result.result = false;
-      waypoint_navigation_action_server->setPreempted(waypoint_navigation_result);
-      return false;
-    }
-    */
+    ROS_INFO_STREAM("Added " << i << "th waypoint. Lat: " << lat << " Lon: " <<  lon << "Alt: " << alt);
   }
   ros::NodeHandle nh;
+  rosAdapter->coreAPI->setControl(1);
+  sleep(1);
+  rosAdapter->coreAPI->setControl(1);
+  sleep(1); // To obtain control robustly
   dji_sdk::MissionWpUpload mission_waypoint_task;
   ros::ServiceClient mission_wp_upload_service = nh.serviceClient<dji_sdk::MissionWpUpload>("dji_sdk/mission_waypoint_upload");  
   mission_waypoint_task.request.waypoint_task = waypoint_task;
@@ -467,6 +460,7 @@ bool DJISDKNode::local_waypoint_mission_action_callback(const dji_sdk::LocalWayp
     local_waypoint_mission_action_server->setPreempted(local_waypoint_mission_result);
     return false;
   }
+  sleep( goal->waypoint_list.points.size());
   ros::ServiceClient mission_start_service = nh.serviceClient<dji_sdk::MissionStart>("dji_sdk/mission_start");  
   dji_sdk::MissionStart mission_start;
   bool missionStartSuccess = mission_start_service.call(mission_start);

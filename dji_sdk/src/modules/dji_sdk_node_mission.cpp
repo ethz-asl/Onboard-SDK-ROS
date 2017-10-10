@@ -198,9 +198,9 @@ bool DJISDKMission::mission_wp_upload_callback(dji_sdk::MissionWpUpload::Request
 	new_task.gimbalPitch = waypoint_task.gimbal_pitch_mode;
 
 	rosAdapter->waypoint->init(&new_task);
-	printf("uploaded the task with %d waypoints\n", new_task.indexNumber);
+	printf("uploading the task with %d waypoints...\n", new_task.indexNumber);
 
-	sleep(0.2);
+	sleep(1);
 
 	int i = 0;
 	for (auto waypoint:waypoint_task.mission_waypoint) {
@@ -224,7 +224,7 @@ bool DJISDKMission::mission_wp_upload_callback(dji_sdk::MissionWpUpload::Request
 		rosAdapter->waypoint->uploadIndexData(&new_waypoint);
 		printf("uploaded the %dth waypoint\n", new_waypoint.index);
 		i+=1;
-		sleep(0.2);
+		sleep(1); // necessary to prevent "not enoug memory errors"
 	}
 	
 	current_type = MissionType::WAYPOINT;
