@@ -214,7 +214,7 @@ bool DJISDKMission::mission_wp_upload_callback(dji_sdk::MissionWpUpload::Request
 		new_waypoint.hasAction = waypoint.has_action;
 		new_waypoint.actionTimeLimit = waypoint.action_time_limit;
 
-		new_waypoint.actionNumber = 15;
+		new_waypoint.actionNumber = 4;
 		new_waypoint.actionRepeat = waypoint.waypoint_action.action_repeat;
 		std::copy(waypoint.waypoint_action.command_list.begin(), waypoint.waypoint_action.command_list.end(), new_waypoint.commandList);
 		std::copy(waypoint.waypoint_action.command_parameter.begin(),waypoint.waypoint_action.command_parameter.end(), new_waypoint.commandParameter);
